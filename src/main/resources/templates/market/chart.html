@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Market Analysis</title>
+    <!-- Chart.js 버전 명시 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        .chart-container {
+            width: 100%;
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin-bottom: 30px;
+        }
+        /* 차트 캔버스에 대한 명시적 스타일 추가 */
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+<body>
+<div id="chartContainer" th:attr="data-analysis=${analysis}" style="padding: 20px;">
+    <h1 th:text="${'Market Analysis: ' + market}">Market Analysis</h1>
+
+    <!-- Price Chart with Bollinger Bands -->
+    <div class="chart-container">
+        <h2>Price & Bollinger Bands</h2>
+        <div class="chart-wrapper">
+            <canvas id="priceChart"></canvas>
+        </div>
+    </div>
+
+    <!-- MACD Chart -->
+    <div class="chart-container">
+        <h2>MACD</h2>
+        <div class="chart-wrapper">
+            <canvas id="macdChart"></canvas>
+        </div>
+    </div>
+
+    <!-- RSI Chart -->
+    <div class="chart-container">
+        <h2>RSI</h2>
+        <div class="chart-wrapper">
+            <canvas id="rsiChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Trading Signals Chart -->
+    <div class="chart-container">
+        <h2>Trading Signals</h2>
+        <div class="chart-wrapper">
+            <canvas id="signalChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const container = document.getElementById('chartContainer');
+            const analysisData = JSON.parse(container.dataset.analysis);
+
+            // timestamps 생성 (현재는 데이터 포인트의 인덱스를 사용)
+            const timestamps = Array.from({ length: analysisData.prices.length }, (_, i) => i);
+
+            // Price Chart with Bollinger Bands
+            new Chart(document.getElementById('priceChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: 'Price',
+                        data: analysisData.prices,
+                        borderColor: 'rgb(255, 99, 132)',
+                        fill: false,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Upper Band',
+                        data: analysisData.bollingerBands[0],
+                        borderColor: 'rgba(54, 162, 235, 0.5)',
+                        fill: false,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Middle Band',
+                        data: analysisData.bollingerBands[1],
+                        borderColor: 'rgba(54, 162, 235, 0.5)',
+                        borderDash: [5, 5],
+                        fill: false,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Lower Band',
+                        data: analysisData.bollingerBands[2],
+                        borderColor: 'rgba(54, 162, 235, 0.5)',
+                        fill: false,
+                        yAxisID: 'y'
+                    }
+                    , {
+                        label: 'Trading Signals',
+                        type: 'bar',
+                        data: analysisData.signals,
+                            backgroundColor: analysisData.signals.map(signal =>
+                            signal > 0 ? 'rgba(75, 192, 192, 0.5)' :
+                           signal < 0 ? 'rgba(255, 99, 132, 0.5)' :
+                                       'rgba(201, 203, 207, 0.5)'
+                        ),
+                           yAxisID: 'y1'
+                    }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Price'
+                            }
+                        },
+                        y1: {
+                           type: 'linear',
+                           display: true,
+                           position: 'right',
+                           title: {
+                               display: true,
+                               text: 'Signal'
+                            },
+                           grid: {
+                               drawOnChartArea: false
+                           },
+                           min: -2,
+                           max: 2
+                        }
+                    }
+                }
+            });
+
+            // MACD Chart
+            new Chart(document.getElementById('macdChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: 'MACD',
+                        data: analysisData.macd,
+                        borderColor: 'rgb(75, 192, 192)',
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+
+            // RSI Chart
+            new Chart(document.getElementById('rsiChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: 'RSI',
+                        data: analysisData.rsi,
+                        borderColor: 'rgb(153, 102, 255)',
+                        fill: false
+                    }, {
+                        label: 'Overbought (70)',
+                        data: Array(timestamps.length).fill(70),
+                        borderColor: 'rgba(255, 99, 132, 0.5)',
+                        borderDash: [5, 5],
+                        fill: false
+                    }, {
+                        label: 'Oversold (30)',
+                        data: Array(timestamps.length).fill(30),
+                        borderColor: 'rgba(255, 99, 132, 0.5)',
+                        borderDash: [5, 5],
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+
+            // Trading Signals Chart
+            new Chart(document.getElementById('signalChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: 'Trading Signals',
+                        data: analysisData.signals,
+                        backgroundColor: analysisData.signals.map(signal =>
+                            signal > 0 ? 'rgba(75, 192, 192, 0.5)' :
+                                signal < 0 ? 'rgba(255, 99, 132, 0.5)' :
+                                    'rgba(201, 203, 207, 0.5)'
+                        )
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+
+        } catch (error) {
+            console.error('Error initializing charts:', error);
+        }
+    });
+</script>
+</body>
+</html>
