@@ -162,12 +162,11 @@ public class TechnicalIndicator {
         }
 
         // 신호 필터링 (연속된 동일 신호 제거)
-        for (int i = 2; i < signals.size(); i++) {
-            if (signals.get(i) == signals.get(i-1) && signals.get(i) != 0) {
-                signals.set(i, 0);
-            }
-        }
-
+        //for (int i = 2; i < signals.size(); i++) {
+        //    if (signals.get(i) == signals.get(i-1) && signals.get(i) != 0) {
+        //        signals.set(i, 0);
+        //    }
+        //}
         return signals;
     }
 
