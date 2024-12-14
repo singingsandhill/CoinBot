@@ -1,5 +1,7 @@
 package scoula.coin.domain.run.Service;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import scoula.coin.application.dto.RunningRecord;
 
 import java.time.LocalDateTime;
@@ -8,6 +10,8 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Service
+@RequiredArgsConstructor
 public class RunService {
     private RunningRecord parseRunningRecord(String text) {
         // 줄 단위로 분리
@@ -133,7 +137,7 @@ public class RunService {
         return 0.0;
     }
 
-    private String extractPace(String text) {
+    public String extractPace(String text) {
         // "Pace" 다음에 나오는 시간 형식 찾기
         Pattern pattern = Pattern.compile("(\\d{1,2}:\\d{2}\\s*/km)");
         Matcher matcher = pattern.matcher(text);

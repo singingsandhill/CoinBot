@@ -1,5 +1,6 @@
 package scoula.coin.presentation.controller;
 
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j;
 import lombok.extern.log4j.Log4j2;
@@ -12,6 +13,7 @@ import scoula.coin.application.dto.RunnerDistanceDTO;
 import scoula.coin.application.dto.RunningRecord;
 import scoula.coin.application.entity.RunningRecords;
 import scoula.coin.domain.run.Repository.RunningRecordsRepository;
+import scoula.coin.domain.run.Service.RunService;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -24,7 +26,10 @@ import java.util.regex.Pattern;
 @Slf4j
 @Controller
 @RequiredArgsConstructor
+
 public class RunningController {
+
+    private final RunService runService;
 
     @GetMapping("/running/home")
     public String Home(Model model) {
@@ -39,6 +44,7 @@ public class RunningController {
     @ResponseBody
     @CrossOrigin
     public ResponseEntity<RunningRecord> saveOcrResult(@RequestBody Map<String, String> payload) {
+
         String extractedText = payload.get("text");
         try {
             RunningRecord record = parseRunningRecord(extractedText);
@@ -91,6 +97,7 @@ public class RunningController {
         LocalDateTime datetime = extractDateTime(text);
         double distance = extractDistance(text);
         String pace = extractPace(text);
+        runService.extractPace(text);
 
         return RunningRecord.builder()
                 .name(name)
