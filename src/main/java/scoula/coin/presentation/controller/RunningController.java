@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import scoula.coin.application.dto.RunnerDistanceDTO;
 import scoula.coin.application.dto.RunningRecord;
 import scoula.coin.application.entity.RunningRecords;
+import scoula.coin.domain.run.Repository.RegularRepository;
 import scoula.coin.domain.run.Repository.RunningRecordsRepository;
 import scoula.coin.domain.run.Service.RunService;
 
@@ -30,6 +31,7 @@ import java.util.regex.Pattern;
 public class RunningController {
 
     private final RunService runService;
+    private final RegularRepository regularRepository;
 
     @GetMapping("/running/home")
     public String Home(Model model) {
@@ -38,6 +40,10 @@ public class RunningController {
     @GetMapping("/running/record")
     public String recordPage(Model model) {
         return "running/record";
+    }
+    @GetMapping("/running/regular")
+    public String Regular(Model model) {
+        return "running/regular";
     }
 
     @PostMapping("/running/save-ocr")
@@ -86,5 +92,17 @@ public class RunningController {
     @ResponseBody
     public List<RunnerDistanceDTO> getRunnerDistances() {
         return repository.findTotalDistanceByRunner();
+    }
+
+    @GetMapping("/running/mostattempt")
+    @ResponseBody
+    public List<Object> getMostAttempt() {
+        return runService.mostattempt();
+    }
+
+    @GetMapping("/running/attempt")
+    @ResponseBody
+    public List<Object> getAttempt() {
+        return regularRepository.findAllof();
     }
 }

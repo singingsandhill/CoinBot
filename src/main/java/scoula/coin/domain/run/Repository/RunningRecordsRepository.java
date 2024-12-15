@@ -14,4 +14,10 @@ public interface RunningRecordsRepository extends JpaRepository<RunningRecords, 
             "FROM RunningRecords r GROUP BY r.name")
     List<RunnerDistanceDTO> findTotalDistanceByRunner();
 
+    @Query("SELECT r.name, count(r) from RunningRecords r GROUP BY r.name ORDER BY count(r) desc ")
+    List<RunningRecords> findNameAndCountGroupByNameOrderByCountDesc();
+
+    @Query("SELECT r.name, sum(r.distance) from RunningRecords r group by r.name ORDER BY sum(r.distance)")
+    List<RunningRecords> findNameAndDistanceGroupByNameOrderByDistance(Long id);
+
 }

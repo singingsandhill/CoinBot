@@ -3,9 +3,12 @@ package scoula.coin.domain.run.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import scoula.coin.application.dto.RunningRecord;
+import scoula.coin.application.entity.Regular;
+import scoula.coin.domain.run.Repository.RegularRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -14,6 +17,8 @@ import java.util.regex.Pattern;
 @Service
 @RequiredArgsConstructor
 public class RunService {
+
+    private final RegularRepository regularRepository;
 
     public RunningRecord parseRunningRecord(String text) {
         String name = extractName(text);
@@ -193,6 +198,10 @@ public class RunService {
         }
 
         return 0.0;
+    }
+
+    public List<Object> mostattempt(){
+        return regularRepository.findByNameCount();
     }
 
 }
