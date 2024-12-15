@@ -18,7 +18,7 @@
             <button onclick="processImage()" class="button">텍스트 추출</button>
         </div>
         <div id="statusMessage" class="status"></div>
-        <!-- <div id="extractedText" class="result"></div> -->
+        <div id="extractedText" class="result"></div>
 
         <div id="parsedData" class="parsed-data" style="display: none;">
             <h3>파싱된 러닝 기록</h3>
@@ -32,15 +32,15 @@
             </div>
             <div class="data-item">
                 <span class="data-label">날짜 및 시간:</span>
-                <span id="datetime" class="editable-field"></span>
+                <input type="datetime-local" id="datetime" class="editable-field">
             </div>
             <div class="data-item">
                 <span class="data-label">거리:</span>
-                <span id="distance" class="editable-field"></span> km
+                <input type="number" id="distance" class="editable-field" step="0.01"> km
             </div>
             <div class="data-item">
                 <span class="data-label">페이스:</span>
-                <span id="pace" class="editable-field"></span>
+                <input type="text" id="pace" class="editable-field">
             </div>
             <div style="margin-top: 20px;">
                 <button onclick="submitRecord()" class="button">기록 저장</button>
@@ -56,7 +56,7 @@
     async function processImage() {
         const imageFile = document.getElementById('imageFile').files[0];
         const statusDiv = document.getElementById('statusMessage');
-        // const resultDiv = document.getElementById('extractedText');
+        const resultDiv = document.getElementById('extractedText');
         const parsedDataDiv = document.getElementById('parsedData');
 
         if (!imageFile) {
@@ -79,10 +79,10 @@
                 }
             );
 
-            //resultDiv.innerHTML = `
-            //    <h4>추출된 텍스트:</h4>
-            //    <pre>${result.data.text}</pre>
-            //;
+            resultDiv.innerHTML = `
+                <h4>추출된 텍스트:</h4>
+                <pre>${result.data.text}</pre>
+            `;
 
             const response = await sendToServer(result.data.text);
             console.log('Server response:', response);
@@ -122,21 +122,15 @@
         document.getElementById('parsedData').style.display = 'block';
         document.getElementById('runnerName').value = data.name || '';
         document.getElementById('location').value = data.location || '';
-        document.getElementById('datetime').textContent = formatDateTime(data.dateTime) || '추출 실패';
-        document.getElementById('distance').textContent = data.distance || '추출 실패';
-        document.getElementById('pace').textContent = data.pace || '추출 실패';
+        document.getElementById('datetime').value = data.dateTime ? formatDateTime(data.dateTime) : '';
+        document.getElementById('distance').value = data.distance || '';
+        document.getElementById('pace').value = data.pace || '';
     }
 
     function formatDateTime(dateTimeStr) {
-        if (!dateTimeStr) return '추출 실패';
+        if (!dateTimeStr) return '';
         const date = new Date(dateTimeStr);
-        return date.toLocaleString('ko-KR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        return date.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm" 형식
     }
 
     async function submitRecord() {
@@ -144,7 +138,12 @@
             const updatedData = {
                 ...currentData,
                 name: document.getElementById('runnerName').value,
-                location: document.getElementById('location').value
+                location: document.getElementById('location').value,
+                dateTime: document.getElementById('datetime').value
+                    ? new Date(document.getElementById('datetime').value).toISOString()
+                    : null,
+                distance: parseFloat(document.getElementById('distance').value),
+                pace: document.getElementById('pace').value
             };
 
             const response = await fetch('/running/save', {
