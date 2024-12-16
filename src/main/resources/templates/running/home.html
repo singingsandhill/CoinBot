@@ -7,19 +7,74 @@
     <link href="/css/styles.css" rel="stylesheet">
 </head>
 <body class="bg">
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/running/home" class="nav-link">러닝 마일리지</a>
+        <a href="/running/record" class="nav-link">러닝 기록 추가하기</a>
+        <a href="/running/regular" class="nav-link">정규런 보러가기</a>
+    </div>
+</nav>
+
 <div class="container">
     <div id="runner-progress-root"></div>
-    <nav class="navigation">
-        <a href="/running/record" class="nav-link">러닝 기록 추가하기</a>
-    </nav>
-    <br>
-    <nav class="navigation">
-    <a href="/running/regular" class="nav-link">정규런 보러가기</a>
-    </nav>
+    <button id="kakao-link-btn">
+        <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png"
+             alt="카카오톡 공유하기"
+             style="width: 24px; height: 24px;">
+        카카오톡 공유하기
+    </button>
 </div>
 
 <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
 <script src="/js/runner-progress.js"></script>
+<script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+<script>
+    // 카카오톡 초기화
+    Kakao.init('255ab246007b5ba626c01b60850398a9');
+
+    // 초기화 여부 확인
+    if (!Kakao.isInitialized()) {
+        console.error('Kakao SDK 초기화 실패');
+    }
+
+    // 카카오톡 공유하기 버튼 생성
+    Kakao.Link.createDefaultButton({
+        container: '#kakao-link-btn',
+        objectType: 'feed',
+        content: {
+            title: '97Runners 마일리지 현황',
+            description: '97Runners의 러닝 마일리지 현황을 확인해보세요!',
+            imageUrl: 'https://drive.google.com/file/d/18p-1SVrk86_1wN8MJN29YXoGx58-VMoO/view?usp=sharing', // 로고 이미지 경로로 수정 필요
+            link: {
+                mobileWebUrl: window.location.href,
+                webUrl: window.location.href,
+            },
+        },
+        social: {
+            viewCount: 0,
+            likeCount: 0,
+            commentCount: 0,
+            sharedCount: 0,
+        },
+        buttons: [
+            {
+                title: '웹으로 보기',
+                link: {
+                    mobileWebUrl: window.location.href,
+                    webUrl: window.location.href,
+                },
+            }
+        ],
+    });
+
+    // 에러 처리
+    window.onerror = function(message, source, lineno, colno, error) {
+        if (message.includes('Kakao')) {
+            console.error('카카오톡 공유 기능 에러:', error);
+            alert('카카오톡 공유 기능을 사용할 수 없습니다. 잠시 후 다시 시도해주세요.');
+        }
+    };
+</script>
 </body>
 </html>

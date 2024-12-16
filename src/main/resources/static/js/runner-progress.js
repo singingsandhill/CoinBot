@@ -44,6 +44,8 @@ const RunnerProgress = () => {
         }
     };
 
+    const maxAchievedDistance = runnerData.length > 0 ? runnerData[0].totalDistance : 0;
+
     return React.createElement('div', { className: 'runner-card' },
         React.createElement('h2', {
             style: {
@@ -82,7 +84,7 @@ const RunnerProgress = () => {
                 React.createElement('div', {
                     className: 'progress-fill',
                     style: {
-                        width: `${Math.min((runnerData.reduce((acc, curr) => acc + curr.totalDistance, 0) / MAX_DISTANCE) * 100, 100)}%`,
+                        width: `${Math.min((maxAchievedDistance / MAX_DISTANCE) * 100, 100)}%`,
                         height: '100%',
                         backgroundColor: '#4299e1',
                         transition: 'width 0.5s ease'
@@ -111,7 +113,12 @@ const RunnerProgress = () => {
                             fontSize: '1.5rem',
                             marginBottom: '2px',
                             whiteSpace: 'nowrap',
-                            color: getRankColor(index)
+                            color: getRankColor(index),
+                            backgroundColor: 'white', // 흰색 배경 추가
+                            padding: '4px 8px', // 패딩 추가
+                            borderRadius: '8px', // 모서리 둥글게
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)', // 약간의 그림자 추가
+                            border: `1px solid ${getRankColor(index)}`, // 테두리 추가
                         }
                     }, `${runner.name} (${runner.totalDistance.toFixed(1)}km)`),
                     React.createElement('img', {
