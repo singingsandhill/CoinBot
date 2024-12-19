@@ -29,24 +29,16 @@ public class ChartController {
     public String getMarketChart(
             @RequestParam(defaultValue = "KRW-BTC") String market,
             @RequestParam(defaultValue = "100") int count,
-            Model model) {
-        try {
+            Model model) throws JsonProcessingException {
+
             Map<String, Object> analysis = tradingService.analyzeTradingSignals(market, count);
-            //log.error("Analysis data: " + analysis);
             String analysisJson = objectMapper.writeValueAsString(analysis);
-            //log.error("JSON data: " + analysisJson);
 
             model.addAttribute("market", market);
             model.addAttribute("count", count);
             model.addAttribute("analysis", analysisJson);
 
             return "market/chart";
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            // 예외 처리
-            model.addAttribute("error", "Failed to process market data");
-            return "error";
-        }
     }
 
     @ResponseBody

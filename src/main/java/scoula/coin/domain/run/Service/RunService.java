@@ -2,9 +2,13 @@ package scoula.coin.domain.run.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import scoula.coin.application.dto.RunnerDistanceDTO;
 import scoula.coin.application.dto.RunningRecord;
 import scoula.coin.application.entity.Regular;
+import scoula.coin.application.entity.RunningRecords;
 import scoula.coin.domain.run.Repository.RegularRepository;
+import scoula.coin.domain.run.Repository.RunningRecordsRepository;
+import scoula.coin.global.error.CustomException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -18,22 +22,32 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class RunService {
 
+    private final RunningRecordsRepository runningRecordsRepository;
     private final RegularRepository regularRepository;
 
+    /**
+     * 사진에서 문자를 추출하는 메서드
+     * @param text
+     * @return
+     */
     public RunningRecord parseRunningRecord(String text) {
-        String name = extractName(text);
-        String location = extractLocation(text);
-        LocalDateTime datetime = extractDateTime(text);
-        double distance = extractDistance(text);
-        String pace = extractPace(text);
+        try {
+            String name = extractName(text);
+            String location = extractLocation(text);
+            LocalDateTime datetime = extractDateTime(text);
+            double distance = extractDistance(text);
+            String pace = extractPace(text);
 
-        return RunningRecord.builder()
-                .name(name)
-                .location(location)
-                .dateTime(datetime)
-                .distance(distance)
-                .pace(pace)
-                .build();
+            return RunningRecord.builder()
+                    .name(name)
+                    .location(location)
+                    .dateTime(datetime)
+                    .distance(distance)
+                    .pace(pace)
+                    .build();
+        } catch (Exception e) {
+            return new RunningRecord().builder().name(e.getMessage()).build();
+        }
     }
 
     public String extractName(String text) {
@@ -200,7 +214,30 @@ public class RunService {
         return 0.0;
     }
 
-    public List<Object> mostattempt(){
+    public void saveRunningRecord(RunningRecord record) {
+        try {
+            RunningRecords entity = RunningRecords.builder()
+                    .name(record.getName())
+                    .location(record.getLocation())
+                    .distance(record.getDistance())
+                    .pace(record.getPace())
+                    .build();
+
+            runningRecordsRepository.save(entity);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("fail to save running record");
+        }
+    }
+
+    public List<RunnerDistanceDTO> getRunnerDistances() {
+        return runningRecordsRepository.findTotalDistanceByRunner();
+    }
+
+    public List<Object> getAttempts() {
+        return regularRepository.findAllof();
+    }
+
+    public List<Object> mostAttempt(){
         return regularRepository.findByNameCount();
     }
 
