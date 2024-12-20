@@ -118,55 +118,32 @@ public class TechnicalIndicator {
         return List.of(upperBand, sma, lowerBand);
     }
 
-    public List<Integer> generateSignals(List<Double> prices, List<Double> macd, List<Double> rsi, List<List<Double>> bollingerBands) {
+    public List<Integer> generateSignals(List<Double> prices, List<Double> rsi, List<List<Double>> bollingerBands) {
         List<Integer> signals = new ArrayList<>();
         signals.add(0); // 첫 포인트는 신호 없음
 
-        // 피봇 포인트 계산을 위한 윈도우 크기
-        final int PIVOT_WINDOW = 5;
-        // 모멘텀 계산을 위한 기간
-        final int MOMENTUM_PERIOD = 10;
-
-        for (int i = PIVOT_WINDOW; i < prices.size(); i++) {
-            boolean isPotentialBottom = isPivotBottom(prices, i, PIVOT_WINDOW);
-            boolean isPotentialTop = isPivotTop(prices, i, PIVOT_WINDOW);
-            double momentum = calculateMomentum(prices, i, MOMENTUM_PERIOD);
-
+        for (int i = 0; i < prices.size(); i++) {
             int signal = 0;
 
-            // 매수 신호 조건
-            if (isPotentialBottom && momentum > 0 && rsi.get(i) < 40) {
-                double pricePosition = calculatePricePosition(prices.get(i),
-                        bollingerBands.get(0).get(i), // upper
-                        bollingerBands.get(2).get(i)  // lower
-                );
-                // 가격이 볼린저 밴드 하단 30% 구간에 있을 때
-                if (pricePosition < 0.3) {
-                    signal = 1;
-                }
+            // 볼린저 밴드 위치 계산
+            double pricePosition = calculatePricePosition(prices.get(i),
+                    bollingerBands.get(0).get(i), // upper
+                    bollingerBands.get(2).get(i)  // lower
+            );
+
+            // 매수 신호 조건: RSI < 40이고 볼린저 밴드 하단 30% 이하
+            if (rsi.get(i) < 20 && pricePosition < 0.3) {
+                signal = 1;
             }
 
-            // 매도 신호 조건
-            if (isPotentialTop && momentum < 0 && rsi.get(i) > 60) {
-                double pricePosition = calculatePricePosition(prices.get(i),
-                        bollingerBands.get(0).get(i), // upper
-                        bollingerBands.get(2).get(i)  // lower
-                );
-                // 가격이 볼린저 밴드 상단 30% 구간에 있을 때
-                if (pricePosition > 0.7) {
-                    signal = -1;
-                }
+            // 매도 신호 조건: RSI > 60이고 볼린저 밴드 상단 70% 이상
+            if (rsi.get(i) > 70 && pricePosition > 0.7) {
+                signal = -1;
             }
 
             signals.add(signal);
         }
 
-        // 신호 필터링 (연속된 동일 신호 제거)
-        //for (int i = 2; i < signals.size(); i++) {
-        //    if (signals.get(i) == signals.get(i-1) && signals.get(i) != 0) {
-        //        signals.set(i, 0);
-        //    }
-        //}
         return signals;
     }
 

@@ -8,7 +8,6 @@ import scoula.coin.domain.market.CandleService;
 import scoula.coin.domain.strategy.TechnicalIndicator;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -22,22 +21,22 @@ public class TradingService {
     public Map<String, Object> analyzeTradingSignals(String market, int count) {
         try {
             // 충분한 데이터를 위해 요청 개수를 늘림
-            int extendedCount = count + 50; // EMA 계산을 위한 추가 데이터
+            int extendedCount = count + 35; // RSI와 볼린저 밴드 계산을 위한 추가 데이터
             List<CandleDTO> candles = candleService.getCandle(market, extendedCount);
 
             // 가격 데이터 추출 (최신 데이터가 마지막에 오도록 정렬)
             List<Double> prices = extractPrices(candles);
 
-            // 기술적 지표 계산
             // 최소 필요 데이터 확인
-            if (prices.size() < 26) { // MACD의 느린 선 기간
+            if (prices.size() < 20) { // 볼린저 밴드 기간
                 throw new IllegalStateException("Not enough data points for analysis");
             }
 
-            // 모든 기술적 지표 계산
+            // RSI와 볼린저 밴드 계산
             List<Double> macd = technicalIndicator.calculateMACD(prices, 12, 26, 9);
             List<Double> rsi = technicalIndicator.calculateRSI(prices, 14);
             List<List<Double>> bollingerBands = technicalIndicator.calculateBollingerBands(prices, 20, 2.0);
+
 
             // 가장 최근 데이터만 반환 (요청한 count만큼)
             int resultSize = Math.min(count, prices.size());
@@ -52,10 +51,9 @@ public class TradingService {
                 trimmedBollingerBands.add(band.subList(Math.max(0, band.size() - resultSize), band.size()));
             }
 
-            // 매매 신호 생성
+            // 매매 신호 생성 (RSI와 볼린저 밴드만 사용)
             List<Integer> signals = technicalIndicator.generateSignals(
                     prices,
-                    macd,
                     rsi,
                     trimmedBollingerBands
             );

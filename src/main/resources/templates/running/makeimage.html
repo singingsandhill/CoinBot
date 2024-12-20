@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>이미지 수정</title>
+  <style>
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="file"],
+    input[type="datetime-local"],
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #imagePreview {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2>이미지 텍스트 추가</h2>
+  <form th:action="@{/running/modify}" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+      <label for="image">이미지 선택:</label>
+      <input type="file"
+             id="image"
+             name="image"
+             accept="image/*"
+             required
+             onchange="previewImage(this);">
+    </div>
+
+    <div class="form-group">
+      <label for="dateTime">날짜 및 시간:</label>
+      <input type="datetime-local"
+             id="dateTime"
+             name="dateTime"
+             required>
+    </div>
+
+    <div class="form-group">
+      <label for="location">장소:</label>
+      <input type="text"
+             id="location"
+             name="location"
+             required
+             placeholder="예: Yeouido Park">
+    </div>
+
+    <button type="submit">이미지 수정하기</button>
+  </form>
+
+  <img id="imagePreview" style="display: none;">
+</div>
+
+<script>
+  function previewImage(input) {
+    if (input.files && input.files[0]) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var preview = document.getElementById('imagePreview');
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  // 현재 날짜와 시간을 기본값으로 설정
+  document.addEventListener('DOMContentLoaded', function() {
+    var now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('dateTime').value = now.toISOString().slice(0,16);
+  });
+</script>
+</body>
+</html>

@@ -156,7 +156,6 @@
                 }
             });
 
-            // MACD Chart
             new Chart(document.getElementById('macdChart').getContext('2d'), {
                 type: 'line',
                 data: {
@@ -164,17 +163,42 @@
                     datasets: [{
                         label: 'MACD',
                         data: analysisData.macd,
-                        borderColor: 'rgb(75, 192, 192)',
-                        fill: false
+                        type: 'bar', // 바 차트로 변경
+                        backgroundColor: analysisData.macd.map(value =>
+                            value >= 0 ? 'rgba(75, 192, 192, 0.5)' : 'rgba(255, 99, 132, 0.5)'
+                        ),
+                        borderColor: analysisData.macd.map(value =>
+                            value >= 0 ? 'rgb(75, 192, 192)' : 'rgb(255, 99, 132)'
+                        ),
+                        borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
                     plugins: {
                         legend: {
                             display: true,
                             position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `MACD: ${context.raw.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'MACD Value'
+                            }
                         }
                     }
                 }

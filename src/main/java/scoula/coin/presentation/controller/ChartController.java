@@ -40,12 +40,4 @@ public class ChartController {
 
             return "market/chart";
     }
-
-    @ResponseBody
-    @GetMapping("/data")
-    public Map<String, Object> getMarketData(
-            @RequestParam(defaultValue = "KRW-BTC") String market,
-            @RequestParam(defaultValue = "100") int count) {
-        return tradingService.analyzeTradingSignals(market, count);
-    }
 }

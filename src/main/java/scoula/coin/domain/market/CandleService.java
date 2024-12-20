@@ -6,15 +6,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.ResponseEntity;
+import org.aspectj.apache.bcel.classfile.annotation.NameValuePair;
+import org.springframework.http.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import scoula.coin.application.dto.CandleDTO;
 
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.*;
 
 @Log4j2
@@ -22,7 +26,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class CandleService {
 
-//    @Value("${mycoin.url}")
     private String baseUrl = "https://api.bithumb.com/v1/candles/minutes/1";
     @Value("${mycoin.appKey}")
     private String appKey;
