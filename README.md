@@ -4,9 +4,10 @@
 **coin 자동 매매 봇** <br/>
 서비스 URL: http://run.blu2print.site:8081/market/chart
 ## Running crew archive
-** 러닝 크루 마일리지, 정규런 출석 기록 **
+**러닝 크루 마일리지, 정규런 출석 기록**
 <br/>
-서비스 URL: http://run.blu2print.site:8081/run/home
+서비스 URL: http://run.blu2print.site:8081/running/home
 
 # Project wiki
+프로젝트에 대한 자세한 설명은 wiki에 있습니다.<br/>
 https://github.com/singingsandhill/CoinBot/wiki
