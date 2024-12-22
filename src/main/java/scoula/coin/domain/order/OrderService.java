@@ -45,6 +45,11 @@ public class OrderService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    /**
+     * 주문 가능 조건을 알려주는 메서드
+     * @param market 시장 코드, String
+     * @return
+     */
     public OrderBookDTO getOrderChance(String market) {
         try {
             // API 파라미터 설정
@@ -94,9 +99,7 @@ public class OrderService {
             );
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                // JSON 응답을 JsonNode로 파싱
-                JsonNode rootNode = objectMapper.readTree(response.getBody());
-                JsonNode dataNode = rootNode.get("data");
+                JsonNode dataNode = objectMapper.readTree(response.getBody());
 
                 if (dataNode == null) {
                     throw new RuntimeException("Invalid response format: missing data node");
@@ -120,7 +123,7 @@ public class OrderService {
                 throw new RuntimeException("Failed to get order book");
             }
         } catch (Exception e) {
-            log.error("Error getting order book: ", e);
+            log.error("Error getting order book: "+e+" , "+e.getMessage());
             throw new RuntimeException("Failed to get order book", e);
         }
     }
