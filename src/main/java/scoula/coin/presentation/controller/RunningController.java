@@ -1,5 +1,6 @@
 package scoula.coin.presentation.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -56,6 +57,7 @@ public class RunningController {
         return ResponseEntity.ok(record);
     }
 
+    @Operation(summary = "러닝 기록 저장",description = "사진에서 추출, 수정된 기록 저장")
     @PostMapping("/running/save")
     @ResponseBody
     public ResponseEntity<RunningRecord> saveRecord(@RequestBody RunningRecord record) {
@@ -84,6 +86,7 @@ public class RunningController {
     private final ImageTextService imageTextService;
 
     @PostMapping("/running/modify")
+    @ResponseBody
     public ResponseEntity<byte[]> modifyImage(
             @RequestParam("image") MultipartFile file,
             @RequestParam("dateTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime dateTime,

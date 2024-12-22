@@ -2,6 +2,7 @@ package scoula.coin.presentation.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
@@ -25,7 +26,9 @@ public class ChartController {
     private final TradingService tradingService;
     private final ObjectMapper objectMapper;
 
+    @Operation(summary = "chart화면", description = "API로 candle차트 불러와서 지표 계산")
     @GetMapping("/chart")
+    @ResponseBody
     public String getMarketChart(
             @RequestParam(defaultValue = "KRW-BTC") String market,
             @RequestParam(defaultValue = "100") int count,

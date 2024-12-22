@@ -1,6 +1,7 @@
 package scoula.coin.domain.run.Service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import scoula.coin.application.dto.RunnerDistanceDTO;
 import scoula.coin.application.dto.RunningRecord;
@@ -18,6 +19,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RunService {
@@ -219,13 +221,15 @@ public class RunService {
             RunningRecords entity = RunningRecords.builder()
                     .name(record.getName())
                     .location(record.getLocation())
+                    .dateTime(record.getDateTime())
                     .distance(record.getDistance())
                     .pace(record.getPace())
                     .build();
+            log.error("save data check: "+entity);
 
             runningRecordsRepository.save(entity);
         } catch (Exception e) {
-            throw new IllegalArgumentException("fail to save running record");
+            throw new IllegalArgumentException("Running record 저장 실패: " + e.getMessage());
         }
     }
 
