@@ -199,6 +199,11 @@ public class OrderService {
         return result;
     }
 
+    /**
+     * 주문 생성 메서드
+     * @return
+     * @throws NoSuchAlgorithmException
+     */
     public Object doOrder() throws NoSuchAlgorithmException {
         // Set API parameters
         Map<String, Object> requestBody = new LinkedHashMap<>();

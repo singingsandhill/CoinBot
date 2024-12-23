@@ -52,6 +52,11 @@ public class RunService {
         }
     }
 
+    /**
+     * 추출된 문자에서 패턴을 파악, 이름을 반환하는 메서드
+     * @param text
+     * @return String, 이름
+     */
     public String extractName(String text) {
         // 첫 번째 패턴: "거리 이 정 혁"
         Pattern pattern1 = Pattern.compile("거리\\s+([가-힣]\\s+[가-힣]\\s+[가-힣])");
@@ -72,6 +77,11 @@ public class RunService {
         return "이름 추출 실패";
     }
 
+    /**
+     * 추출된 문자에서 패턴을 파악, 달린 장소를 반환하는 메서드
+     * @param text
+     * @return String, 달린 장소
+     */
     public String extractLocation(String text) {
         // "당 산 동 2 가 영 등 포 구" 패턴
         Pattern pattern1 = Pattern.compile("([가-힣]\\s+[가-힣]\\s+동\\s+\\d+\\s+가\\s+[가-힣]\\s+[가-힣]\\s+[가-힣]\\s+구)");
@@ -97,6 +107,11 @@ public class RunService {
         return "위치 추출 실패";
     }
 
+    /**
+     * 추출된 문자에서 패턴을 파악, 달린 페이스를 반환하는 메서드
+     * @param text
+     * @return String, /km
+     */
     public String extractPace(String text) {
         // "@)" 다음의 "숫자:숫자 km" 패턴
         Pattern pattern = Pattern.compile("@\\)\\s*(\\d+:\\d+)\\s*km");
@@ -136,6 +151,11 @@ public class RunService {
         return "페이스 추출 실패";
     }
 
+    /**
+     * 추출된 문자에서 패턴을 파악, 달린 시간을 반환하는 메서드
+     * @param text
+     * @return LocalDateTime
+     */
     public LocalDateTime extractDateTime(String text) {
         // 영어 날짜 형식: "December 11,2024 at 7:43 PM"
         Pattern englishPattern = Pattern.compile("([A-Za-z]+ \\d{1,2},\\d{4} at \\d{1,2}:\\d{2} [AP]M)");
@@ -185,6 +205,11 @@ public class RunService {
         return LocalDateTime.now();  // 날짜 추출 실패시 현재 시간
     }
 
+    /**
+     * 추출된 문자에서 패턴을 파악, 달린 거리를 반환하는 메서드
+     * @param text
+     * @return double
+     */
     public double extractDistance(String text) {
         Pattern pattern = Pattern.compile("진\\s*행\\s*상\\s*황\\s*이\\s*어\\s*떻\\s*습\\s*니\\s*까\\s*\\?[\\s\\n\\r]*(\\d+\\.\\d+)");
         Matcher matcher = pattern.matcher(text);
@@ -216,6 +241,10 @@ public class RunService {
         return 0.0;
     }
 
+    /**
+     * 추출된 기록 저장
+     * @param record
+     */
     public void saveRunningRecord(RunningRecord record) {
         try {
             RunningRecords entity = RunningRecords.builder()
@@ -233,14 +262,26 @@ public class RunService {
         }
     }
 
+    /**
+     * 기록이 있는 사람들의 달린 거리 반환
+     * @return
+     */
     public List<RunnerDistanceDTO> getRunnerDistances() {
         return runningRecordsRepository.findTotalDistanceByRunner();
     }
 
+    /**
+     * 정규런 참석 기록 있는 사람 반환
+     * @return
+     */
     public List<Object> getAttempts() {
         return regularRepository.findAllof();
     }
 
+    /**
+     * 정규런에 가장 많이 참석한 사람 반환
+     * @return
+     */
     public List<Object> mostAttempt(){
         return regularRepository.findByNameCount();
     }
