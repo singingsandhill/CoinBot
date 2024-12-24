@@ -235,3 +235,50 @@ body {
 #kakao-link-btn:hover {
     background-color: #FDD835;
 }
+
+<!-- coin -->
+.order-status-container {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+.status-box {
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.status-box.success {
+    background-color: rgba(75, 192, 192, 0.1);
+    border: 1px solid rgba(75, 192, 192, 0.5);
+}
+
+.status-box.warning {
+    background-color: rgba(255, 99, 132, 0.1);
+    border: 1px solid rgba(255, 99, 132, 0.5);
+}
+
+.status-box h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 1.2em;
+}
+
+.status-message {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+    color: #555;
+}
+
+.timestamp {
+    margin: 0;
+    font-size: 0.9em;
+    color: #777;
+}
+
+/* To make the order status more visible when signals are present */
+.order-status-highlight {
+    animation: pulse 2s infinite;
+}

@@ -4,9 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import scoula.coin.application.dto.CandleDTO;
+import scoula.coin.application.dto.OrderBookDTO;
 import scoula.coin.domain.market.CandleService;
+import scoula.coin.domain.order.OrderService;
 import scoula.coin.domain.strategy.TechnicalIndicator;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +21,7 @@ import java.util.Map;
 public class TradingService {
     private final CandleService candleService;
     private final TechnicalIndicator technicalIndicator;
+    private final OrderService orderService;
 
     public Map<String, Object> analyzeTradingSignals(String market, int count) {
         try {
@@ -41,6 +46,8 @@ public class TradingService {
             // 가장 최근 데이터만 반환 (요청한 count만큼)
             int resultSize = Math.min(count, prices.size());
 
+            OrderBookDTO orderChance = orderService.getOrderChance(market);
+
             // 최신 데이터를 유지하기 위해 끝에서부터 자름
             prices = prices.subList(prices.size() - resultSize, prices.size());
             macd = macd.subList(Math.max(0, macd.size() - resultSize), macd.size());
@@ -57,18 +64,42 @@ public class TradingService {
                     rsi,
                     trimmedBollingerBands
             );
+            try {
+                // 기존 분석 로직 유지
+                boolean orderExecuted = false;
+                String orderStatus = "No signal generated";
 
-            // 분석 결과 반환
-            return Map.of(
-                    "prices", prices,
-                    "macd", macd,
-                    "rsi", rsi,
-                    "bollingerBands", trimmedBollingerBands,
-                    "signals", signals
-            );
-        } catch (Exception e) {
-            log.error("Error in trading analysis: ", e);
-            throw new RuntimeException("Failed to analyze trading signals", e);
+                if (!signals.isEmpty() && !prices.isEmpty()) {
+                    int latestSignal = signals.get(signals.size() - 1);
+                    double currentPrice = prices.get(prices.size() - 1);
+
+                    if (latestSignal != 0) {
+                        try {
+                            executeOrder(market, latestSignal, currentPrice, orderChance);
+                            orderExecuted = true;
+                            orderStatus = "Order executed successfully";
+                        } catch (Exception e) {
+                            orderStatus = "Order execution failed: " + e.getMessage();
+                            log.error("Order execution failed", e);
+                        }
+                    }
+                }
+
+                return Map.of(
+                        "prices", prices,
+                        "macd", macd,
+                        "rsi", rsi,
+                        "bollingerBands", trimmedBollingerBands,
+                        "signals", signals,
+                        "orderExecuted", orderExecuted,
+                        "orderStatus", orderStatus
+                );
+            } catch (Exception e) {
+                log.error("Error in trading analysis: ", e);
+                throw new RuntimeException("Failed to analyze trading signals", e);
+            }
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -80,5 +111,71 @@ public class TradingService {
             prices.add(candles.get(i).getTradePrice());
         }
         return prices;
+    }
+
+    /**
+     * Executes an order with smart order sizing based on account balance and minimum order requirements.
+     * This method ensures orders adhere to exchange constraints while optimizing size for risk management.
+     *
+     * @param market       The market symbol (e.g., KRW-BTC)
+     * @param signal       Trading signal (-1 for sell, 1 for buy)
+     * @param currentPrice Current market price
+     * @param orderChance  Order chance information with minimum order constraints
+     */
+    private void executeOrder(String market, int signal, double currentPrice, OrderBookDTO orderChance) {
+        try {
+            // Get account balance information
+            BigDecimal availableBalance;
+            BigDecimal minOrderSize;
+
+            if (signal > 0) {  // Buy signal
+                // Get KRW balance for buying
+                availableBalance = orderChance.getBidAccount().getBalance();
+                minOrderSize = orderChance.getMarket().getBid().getMinTotal();
+            } else {  // Sell signal
+                // Get crypto balance for selling
+                availableBalance = orderChance.getAskAccount().getBalance();
+                minOrderSize = orderChance.getMarket().getAsk().getMinTotal();
+            }
+
+            // Calculate order size (10% of available balance)
+            BigDecimal orderSize = availableBalance.multiply(BigDecimal.valueOf(0.1))
+                    .setScale(8, RoundingMode.DOWN);
+
+            // Ensure order size is at least the minimum required
+            if (orderSize.compareTo(minOrderSize) < 0) {
+                orderSize = minOrderSize;
+            }
+
+            // Check if we have sufficient balance
+            if (availableBalance.compareTo(orderSize) >= 0) {
+                // Calculate volume based on current price
+                BigDecimal volume = orderSize.divide(
+                        BigDecimal.valueOf(currentPrice),
+                        8,
+                        RoundingMode.DOWN
+                );
+
+                // Execute order
+                orderService.doOrder(market,
+                        signal > 0 ? "bid" : "ask",
+                        volume.doubleValue(),
+                        currentPrice,
+                        "limit"
+                );
+
+                log.info("Order executed: {} {} {} at price {}",
+                        signal > 0 ? "Buy" : "Sell",
+                        volume,
+                        market,
+                        currentPrice
+                );
+            } else {
+                log.warn("Insufficient balance for order execution");
+            }
+        } catch (Exception e) {
+            log.error("Error executing order: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to execute order", e);
+        }
     }
 }

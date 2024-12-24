@@ -47,6 +47,7 @@ public class OrderService {
 
     /**
      * 주문 가능 조건을 알려주는 메서드
+     *
      * @param market 시장 코드, String
      * @return
      */
@@ -123,7 +124,7 @@ public class OrderService {
                 throw new RuntimeException("Failed to get order book");
             }
         } catch (Exception e) {
-            log.error("Error getting order book: "+e+" , "+e.getMessage());
+            log.error("Error getting order book: " + e + " , " + e.getMessage());
             throw new RuntimeException("Failed to get order book", e);
         }
     }
@@ -201,26 +202,29 @@ public class OrderService {
 
     /**
      * 주문 생성 메서드
+     *
      * @return
      * @throws NoSuchAlgorithmException
      */
-    public Object doOrder() throws NoSuchAlgorithmException {
+    public Object doOrder(String market, String side, double volume, double price, String ordType) throws NoSuchAlgorithmException {
         // Set API parameters
         Map<String, Object> requestBody = new LinkedHashMap<>();
-        requestBody.put("market", "KRW-BTC");
-        requestBody.put("side", "bid");
-        requestBody.put("volume", 0.001);
-        requestBody.put("price", 84000000);
-        requestBody.put("ord_type", "limit");
+        requestBody.put("market", market);
+        requestBody.put("side", side);  // "bid" for buy, "ask" for sell
+        requestBody.put("volume", volume);
+        requestBody.put("price", price);
+        requestBody.put("ord_type", ordType);
 
         // Generate access token
         List<BasicNameValuePair> queryParams = requestBody.entrySet().stream()
                 .map(entry -> new BasicNameValuePair(entry.getKey(), String.valueOf(entry.getValue())))
                 .toList();
         String query = URLEncodedUtils.format(queryParams, StandardCharsets.UTF_8);
+
         MessageDigest md = MessageDigest.getInstance("SHA-512");
         md.update(query.getBytes(StandardCharsets.UTF_8));
         String queryHash = String.format("%0128x", new BigInteger(1, md.digest()));
+
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
         String jwtToken = JWT.create()
                 .withClaim("access_key", accessKey)
@@ -235,22 +239,29 @@ public class OrderService {
         final HttpPost httpRequest = new HttpPost(baseUrl + "/v1/orders");
         httpRequest.addHeader("Authorization", authenticationToken);
         httpRequest.addHeader("Content-type", "application/json");
+
         try {
-            httpRequest.setEntity(new StringEntity(new ObjectMapper().writeValueAsString(requestBody), StandardCharsets.UTF_8));
+            httpRequest.setEntity(new StringEntity(objectMapper.writeValueAsString(requestBody), StandardCharsets.UTF_8));
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to process request body", e);
         }
 
         try (CloseableHttpClient client = HttpClients.createDefault();
              CloseableHttpResponse response = client.execute(httpRequest)) {
-            // handle to response
+
             int httpStatus = response.getStatusLine().getStatusCode();
             String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-            System.out.println(httpStatus);
-            System.out.println(responseBody);
+
+            log.debug("Order API Response - Status: {}, Body: {}", httpStatus, responseBody);
+
+            if (httpStatus != 200) {
+                throw new RuntimeException("Order API failed with status " + httpStatus + ": " + responseBody);
+            }
+
+            return objectMapper.readTree(responseBody);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            log.error("Failed to execute order: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to execute order", e);
         }
-        return requestBody;
     }
 }

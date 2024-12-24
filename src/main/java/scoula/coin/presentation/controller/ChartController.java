@@ -28,19 +28,20 @@ public class ChartController {
 
     @Operation(summary = "chart화면", description = "API로 candle차트 불러와서 지표 계산")
     @GetMapping("/chart")
-    @ResponseBody
     public String getMarketChart(
             @RequestParam(defaultValue = "KRW-BTC") String market,
             @RequestParam(defaultValue = "100") int count,
             Model model) throws JsonProcessingException {
 
-            Map<String, Object> analysis = tradingService.analyzeTradingSignals(market, count);
-            String analysisJson = objectMapper.writeValueAsString(analysis);
+        Map<String, Object> analysis = tradingService.analyzeTradingSignals(market, count);
+        String analysisJson = objectMapper.writeValueAsString(analysis);
 
-            model.addAttribute("market", market);
-            model.addAttribute("count", count);
-            model.addAttribute("analysis", analysisJson);
+        model.addAttribute("market", market);
+        model.addAttribute("count", count);
+        model.addAttribute("analysis", analysisJson);
+        model.addAttribute("orderExecuted", analysis.get("orderExecuted"));
+        model.addAttribute("orderStatus", analysis.get("orderStatus"));
 
-            return "market/chart";
+        return "market/chart";
     }
 }

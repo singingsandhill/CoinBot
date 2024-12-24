@@ -23,11 +23,26 @@
             width: 100% !important;
             height: 100% !important;
         }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
 <div id="chartContainer" th:attr="data-analysis=${analysis}" style="padding: 20px;">
     <h1 th:text="${'Market Analysis: ' + market}">Market Analysis</h1>
+
+    <!-- Order Status Section -->
+    <div class="order-status-container" th:if="${orderExecuted != null}">
+        <div class="status-box" th:classappend="${orderExecuted ? 'success' : 'warning'}">
+            <h3>Order Status</h3>
+            <p class="status-message" th:text="${orderStatus}">Order status message</p>
+            <p class="timestamp">Last updated: <span th:text="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd HH:mm:ss')}"></span></p>
+        </div>
+    </div>
 
     <!-- Price Chart with Bollinger Bands -->
     <div class="chart-container">
@@ -67,6 +82,18 @@
         try {
             const container = document.getElementById('chartContainer');
             const analysisData = JSON.parse(container.dataset.analysis);
+
+            // Handle order status display
+            if (analysisData.orderExecuted !== undefined) {
+                const statusBox = document.querySelector('.status-box');
+                if (statusBox) {
+                    if (analysisData.signals &&
+                        analysisData.signals.length > 0 &&
+                        analysisData.signals[analysisData.signals.length - 1] !== 0) {
+                        statusBox.classList.add('order-status-highlight');
+                    }
+                }
+            }
 
             // timestamps 생성 (현재는 데이터 포인트의 인덱스를 사용)
             const timestamps = Array.from({ length: analysisData.prices.length }, (_, i) => i);
@@ -280,6 +307,15 @@
 
         } catch (error) {
             console.error('Error initializing charts:', error);
+
+            const container = document.getElementById('chartContainer');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'status-box warning';
+            errorDiv.innerHTML = `
+            <h3>Error</h3>
+            <p class="status-message">Failed to load chart data: ${error.message}</p>
+        `;
+            container.prepend(errorDiv);
         }
     });
 </script>
