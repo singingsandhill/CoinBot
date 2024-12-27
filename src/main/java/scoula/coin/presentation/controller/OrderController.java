@@ -4,22 +4,27 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import scoula.coin.application.dto.TradingSignalHistoryDTO;
+import scoula.coin.application.entity.TradingSignalHistory;
 import scoula.coin.domain.order.OrderService;
+import scoula.coin.application.dto.OrderHistoryDTO;
+import scoula.coin.domain.run.Repository.TradingSignalHistoryRepository;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
-@RequestMapping("/coin/order")
+@RequestMapping("/coin")
 @RequiredArgsConstructor
 public class OrderController {
-    private final OrderService orderService;
 
-    @PostMapping
+    private final OrderService orderService;
+    private final TradingSignalHistoryRepository tradingSignalHistoryRepository;
+
+    @PostMapping("/order")
     public ResponseEntity<?> createOrder(
             @RequestParam String market,
             @RequestParam String side,
@@ -47,5 +52,36 @@ public class OrderController {
                     )
             );
         }
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<OrderHistoryDTO>> getOrderHistory(
+            @RequestParam(required = false) String market) {
+        List<OrderHistoryDTO> history = orderService.getOrderHistory(market);
+        return ResponseEntity.ok(history);
+    }
+
+    @GetMapping("/signals")
+    public ResponseEntity<List<TradingSignalHistoryDTO>> getSignalHistory(
+            @RequestParam(required = false) String market,
+            @RequestParam(required = false) Integer signalType,
+            @RequestParam(required = false) Boolean executed) {
+
+        List<TradingSignalHistory> signals;
+        if (market != null) {
+            signals = tradingSignalHistoryRepository.findByMarketOrderByCreatedAtDesc(market);
+        } else if (signalType != null) {
+            signals = tradingSignalHistoryRepository.findBySignalTypeOrderByCreatedAtDesc(signalType);
+        } else if (executed != null) {
+            signals = tradingSignalHistoryRepository.findByOrderExecutedOrderByCreatedAtDesc(executed);
+        } else {
+            signals = (List<TradingSignalHistory>) tradingSignalHistoryRepository.findAll();
+        }
+
+        List<TradingSignalHistoryDTO> dtos = signals.stream()
+                .map(TradingSignalHistoryDTO::fromEntity)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
     }
 }

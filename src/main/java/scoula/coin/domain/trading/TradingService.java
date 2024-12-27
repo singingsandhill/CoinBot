@@ -1,12 +1,15 @@
 package scoula.coin.domain.trading;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import scoula.coin.application.dto.CandleDTO;
 import scoula.coin.application.dto.OrderBookDTO;
+import scoula.coin.application.entity.TradingSignalHistory;
 import scoula.coin.domain.market.CandleService;
 import scoula.coin.domain.order.OrderService;
+import scoula.coin.domain.run.Repository.TradingSignalHistoryRepository;
 import scoula.coin.domain.strategy.TechnicalIndicator;
 
 import java.math.BigDecimal;
@@ -23,6 +26,7 @@ public class TradingService {
     private final CandleService candleService;
     private final TechnicalIndicator technicalIndicator;
     private final OrderService orderService;
+    private final TradingSignalHistoryRepository signalHistoryRepository;
 
     public Map<String, Object> analyzeTradingSignals(String market, int count) {
         try {
@@ -121,12 +125,19 @@ public class TradingService {
     }
 
     private void executeOrder(String market, int signal, double currentPrice, OrderBookDTO orderChance) {
+        TradingSignalHistory signalHistory = TradingSignalHistory.builder()
+                .market(market)
+                .price(BigDecimal.valueOf(currentPrice))
+                .signalType(signal)
+                .orderExecuted(false)  // 초기값
+                .build();
         try {
             if (signal > 0) {  // Buy signal
                 executeBuyOrder(market, currentPrice, orderChance);
             } else {  // Sell signal
                 executeSellOrder(market, currentPrice, orderChance);
             }
+            signalHistory.setOrderExecuted(true);
         } catch (Exception e) {
             log.error("Error executing order: " + e.getMessage(), e);
             throw new RuntimeException("Failed to execute order", e);
@@ -202,14 +213,22 @@ public class TradingService {
         executeOrderRequest(market, "ask", sellVolume.doubleValue(), currentPrice);
     }
 
-    private void executeOrderRequest(String market, String side, double volume, double currentPrice) throws Exception {
-        orderService.doOrder(market, side, volume, currentPrice, "limit");
-        log.info("Order executed: {} {} {} at price {} (Total: {} KRW)",
-                side.equals("bid") ? "Buy" : "Sell",
-                volume,
-                market,
-                currentPrice,
-                volume * currentPrice
-        );
+    private void executeOrderRequest(String market, String side, double volume, double price) throws Exception {
+        Object orderResult = orderService.doOrder(market, side, volume, price, "limit");
+        // orderResult에서 UUID 추출하여 시그널 이력 업데이트
+        if (orderResult instanceof JsonNode) {
+            String uuid = ((JsonNode) orderResult).get("uuid").asText();
+            // 가장 최근 시그널 이력 찾아서 업데이트
+            TradingSignalHistory latestSignal = signalHistoryRepository
+                    .findByMarketOrderByCreatedAtDesc(market)
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+
+            if (latestSignal != null) {
+                latestSignal.setOrderUuid(uuid);
+                signalHistoryRepository.save(latestSignal);
+            }
+        }
     }
 }

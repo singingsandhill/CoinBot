@@ -21,6 +21,9 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import scoula.coin.application.dto.OrderBookDTO;
+import scoula.coin.application.dto.OrderHistoryDTO;
+import scoula.coin.application.entity.OrderHistory;
+import scoula.coin.domain.run.Repository.OrderHistoryRepository;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -28,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -44,6 +48,8 @@ public class OrderService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+
+    private final OrderHistoryRepository orderHistoryRepository;
 
     /**
      * 주문 가능 조건을 알려주는 메서드
@@ -258,10 +264,39 @@ public class OrderService {
                 throw new RuntimeException("Order API failed with status " + httpStatus + ": " + responseBody);
             }
 
-            return objectMapper.readTree(responseBody);
+            JsonNode responseNode = objectMapper.readTree(responseBody);
+
+            // 주문 내역 저장
+            OrderHistory orderHistory = OrderHistory.builder()
+                    .uuid(responseNode.get("uuid").asText())
+                    .market(responseNode.get("market").asText())
+                    .side(responseNode.get("side").asText())
+                    .ordType(responseNode.get("ord_type").asText())
+                    .price(new BigDecimal(responseNode.get("price").asText()))
+                    .volume(new BigDecimal(responseNode.get("volume").asText()))
+                    .remainingVolume(new BigDecimal(responseNode.get("remaining_volume").asText()))
+                    .reservedFee(new BigDecimal(responseNode.get("reserved_fee").asText()))
+                    .remainingFee(new BigDecimal(responseNode.get("remaining_fee").asText()))
+                    .paidFee(new BigDecimal(responseNode.get("paid_fee").asText()))
+                    .locked(new BigDecimal(responseNode.get("locked").asText()))
+                    .executedVolume(new BigDecimal(responseNode.get("executed_volume").asText()))
+                    .tradesCount(responseNode.get("trades_count").asInt())
+                    .state(responseNode.get("state").asText())
+                    .build();
+
+            orderHistoryRepository.save(orderHistory);
+
+            return orderHistory;
         } catch (Exception e) {
             log.error("Failed to execute order: " + e.getMessage(), e);
             throw new RuntimeException("Failed to execute order", e);
         }
+    }
+
+    public List<OrderHistoryDTO> getOrderHistory(String market) {
+        return orderHistoryRepository.findByMarketOrderByCreatedAtDesc(market)
+                .stream()
+                .map(OrderHistoryDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 }
