@@ -132,7 +132,7 @@ public class TechnicalIndicator {
             );
 
             // 매수 신호 조건: RSI < 40이고 볼린저 밴드 하단 30% 이하
-            if (rsi.get(i) < 20 && pricePosition < 0.3) {
+            if (rsi.get(i) < 30 && pricePosition < 0.3) {
                 signal = 1;
             }
 

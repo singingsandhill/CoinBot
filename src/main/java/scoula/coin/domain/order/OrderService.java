@@ -254,7 +254,7 @@ public class OrderService {
 
             log.debug("Order API Response - Status: {}, Body: {}", httpStatus, responseBody);
 
-            if (httpStatus != 200) {
+            if (httpStatus != 200 && httpStatus != 201) {
                 throw new RuntimeException("Order API failed with status " + httpStatus + ": " + responseBody);
             }
 

@@ -12,6 +12,7 @@ import scoula.coin.domain.strategy.TechnicalIndicator;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +43,6 @@ public class TradingService {
             List<Double> rsi = technicalIndicator.calculateRSI(prices, 14);
             List<List<Double>> bollingerBands = technicalIndicator.calculateBollingerBands(prices, 20, 2.0);
 
-
             // 가장 최근 데이터만 반환 (요청한 count만큼)
             int resultSize = Math.min(count, prices.size());
 
@@ -58,50 +58,57 @@ public class TradingService {
                 trimmedBollingerBands.add(band.subList(Math.max(0, band.size() - resultSize), band.size()));
             }
 
-            // 매매 신호 생성 (RSI와 볼린저 밴드만 사용)
+            // 모든 분봉에 대한 신호 생성
             List<Integer> signals = technicalIndicator.generateSignals(
                     prices,
                     rsi,
                     trimmedBollingerBands
             );
-            try {
-                // 기존 분석 로직 유지
-                boolean orderExecuted = false;
-                String orderStatus = "No signal generated";
 
-                if (!signals.isEmpty() && !prices.isEmpty()) {
-                    int latestSignal = signals.get(signals.size() - 1);
-                    double currentPrice = prices.get(prices.size() - 1);
+            boolean orderExecuted = false;
+            String orderStatus = "No signal generated";
 
-                    if (latestSignal != 0) {
-                        try {
-                            executeOrder(market, latestSignal, currentPrice, orderChance);
-                            orderExecuted = true;
-                            orderStatus = "Order executed successfully";
-                        } catch (Exception e) {
-                            orderStatus = "Order execution failed: " + e.getMessage();
-                            log.error("Order execution failed", e);
-                        }
+            // 마지막 분봉의 신호에 대해서만 주문 실행
+            if (!signals.isEmpty() && !prices.isEmpty()) {
+                int latestSignal = signals.get(signals.size() - 1);
+                double currentPrice = prices.get(prices.size() - 1);
+                double lastRsi = rsi.get(rsi.size() - 1);
+
+                if (latestSignal != 0) {
+                    log.info("Trading signal detected in last candle - Type: {}, RSI: {}, Price: {}",
+                            latestSignal > 0 ? "BUY" : "SELL",
+                            lastRsi,
+                            currentPrice);
+
+                    try {
+                        executeOrder(market, latestSignal, currentPrice, orderChance);
+                        orderExecuted = true;
+                        orderStatus = "Order executed successfully for last candle signal";
+                    } catch (Exception e) {
+                        orderStatus = "Order execution failed: " + e.getMessage();
+                        log.error("Order execution failed for last candle", e);
                     }
+                } else {
+                    log.debug("No trading signal in last candle. RSI: {}, Price: {}",
+                            lastRsi, currentPrice);
                 }
-
-                return Map.of(
-                        "prices", prices,
-                        "macd", macd,
-                        "rsi", rsi,
-                        "bollingerBands", trimmedBollingerBands,
-                        "signals", signals,
-                        "orderExecuted", orderExecuted,
-                        "orderStatus", orderStatus
-                );
-            } catch (Exception e) {
-                log.error("Error in trading analysis: ", e);
-                throw new RuntimeException("Failed to analyze trading signals", e);
             }
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
+
+            return Map.of(
+                    "prices", prices,
+                    "macd", macd,
+                    "rsi", rsi,
+                    "bollingerBands", trimmedBollingerBands,
+                    "signals", signals,
+                    "orderExecuted", orderExecuted,
+                    "orderStatus", orderStatus
+            );
+        } catch (Exception e) {
+            log.error("Error in trading analysis: ", e);
+            throw new RuntimeException("Failed to analyze trading signals", e);
         }
     }
+
 
     private List<Double> extractPrices(List<CandleDTO> candles) {
         // 최신 데이터가 마지막에 오도록 정렬된 가격 리스트 반환
@@ -113,69 +120,96 @@ public class TradingService {
         return prices;
     }
 
-    /**
-     * Executes an order with smart order sizing based on account balance and minimum order requirements.
-     * This method ensures orders adhere to exchange constraints while optimizing size for risk management.
-     *
-     * @param market       The market symbol (e.g., KRW-BTC)
-     * @param signal       Trading signal (-1 for sell, 1 for buy)
-     * @param currentPrice Current market price
-     * @param orderChance  Order chance information with minimum order constraints
-     */
     private void executeOrder(String market, int signal, double currentPrice, OrderBookDTO orderChance) {
         try {
-            // Get account balance information
-            BigDecimal availableBalance;
-            BigDecimal minOrderSize;
-
             if (signal > 0) {  // Buy signal
-                // Get KRW balance for buying
-                availableBalance = orderChance.getBidAccount().getBalance();
-                minOrderSize = orderChance.getMarket().getBid().getMinTotal();
+                executeBuyOrder(market, currentPrice, orderChance);
             } else {  // Sell signal
-                // Get crypto balance for selling
-                availableBalance = orderChance.getAskAccount().getBalance();
-                minOrderSize = orderChance.getMarket().getAsk().getMinTotal();
-            }
-
-            // Calculate order size (10% of available balance)
-            BigDecimal orderSize = availableBalance.multiply(BigDecimal.valueOf(0.1))
-                    .setScale(8, RoundingMode.DOWN);
-
-            // Ensure order size is at least the minimum required
-            if (orderSize.compareTo(minOrderSize) < 0) {
-                orderSize = minOrderSize;
-            }
-
-            // Check if we have sufficient balance
-            if (availableBalance.compareTo(orderSize) >= 0) {
-                // Calculate volume based on current price
-                BigDecimal volume = orderSize.divide(
-                        BigDecimal.valueOf(currentPrice),
-                        8,
-                        RoundingMode.DOWN
-                );
-
-                // Execute order
-                orderService.doOrder(market,
-                        signal > 0 ? "bid" : "ask",
-                        volume.doubleValue(),
-                        currentPrice,
-                        "limit"
-                );
-
-                log.info("Order executed: {} {} {} at price {}",
-                        signal > 0 ? "Buy" : "Sell",
-                        volume,
-                        market,
-                        currentPrice
-                );
-            } else {
-                log.warn("Insufficient balance for order execution");
+                executeSellOrder(market, currentPrice, orderChance);
             }
         } catch (Exception e) {
             log.error("Error executing order: " + e.getMessage(), e);
             throw new RuntimeException("Failed to execute order", e);
         }
+    }
+
+    private void executeBuyOrder(String market, double currentPrice, OrderBookDTO orderChance) throws Exception {
+        // Get KRW balance for buying
+        BigDecimal availableBalance = orderChance.getBidAccount().getBalance();
+        BigDecimal minOrderSize = orderChance.getMarket().getBid().getMinTotal();
+
+        // Calculate order size (10% of available balance)
+        BigDecimal orderSize = availableBalance.multiply(BigDecimal.valueOf(0.1))
+                .setScale(8, RoundingMode.DOWN);
+
+        // Ensure order size is at least the minimum required
+        if (orderSize.compareTo(minOrderSize) < 0) {
+            orderSize = minOrderSize;
+        }
+
+        // Check if we have sufficient balance
+        if (availableBalance.compareTo(orderSize) >= 0) {
+            // Calculate volume based on current price
+            BigDecimal volume = orderSize.divide(
+                    BigDecimal.valueOf(currentPrice),
+                    8,
+                    RoundingMode.DOWN
+            );
+
+            executeOrderRequest(market, "bid", volume.doubleValue(), currentPrice);
+        } else {
+            log.warn("Insufficient KRW balance for buy order. Available: {} KRW", availableBalance);
+        }
+    }
+
+    private void executeSellOrder(String market, double currentPrice, OrderBookDTO orderChance) throws Exception {
+        // Get BTC balance
+        BigDecimal btcBalance = orderChance.getAskAccount().getBalance();
+
+        // Minimum BTC order size (0.0001 BTC)
+        BigDecimal MIN_BTC_ORDER = new BigDecimal("0.0001");
+
+        // Skip if no BTC balance or balance less than minimum
+        if (btcBalance.compareTo(BigDecimal.ZERO) <= 0) {
+            log.warn("No BTC balance available for sell order");
+            return;
+        }
+
+        if (btcBalance.compareTo(MIN_BTC_ORDER) < 0) {
+            log.warn("BTC balance ({}) is less than minimum order size ({})",
+                    btcBalance, MIN_BTC_ORDER);
+            return;
+        }
+
+        // Calculate 10% of BTC balance
+        BigDecimal tenPercentBTC = btcBalance.multiply(BigDecimal.valueOf(0.1))
+                .setScale(8, RoundingMode.DOWN);
+
+        // Use larger of 10% and minimum BTC order
+        BigDecimal sellVolume = tenPercentBTC.max(MIN_BTC_ORDER);
+
+        // Ensure we don't sell more than available
+        if (sellVolume.compareTo(btcBalance) > 0) {
+            sellVolume = btcBalance;
+        }
+
+        // Log trade details
+        BigDecimal totalValueKRW = sellVolume.multiply(BigDecimal.valueOf(currentPrice));
+        log.info("Executing sell order - Volume: {} BTC, Price: {} KRW, Total Value: {} KRW",
+                sellVolume, currentPrice, totalValueKRW);
+
+        // Execute sell order
+        executeOrderRequest(market, "ask", sellVolume.doubleValue(), currentPrice);
+    }
+
+    private void executeOrderRequest(String market, String side, double volume, double currentPrice) throws Exception {
+        orderService.doOrder(market, side, volume, currentPrice, "limit");
+        log.info("Order executed: {} {} {} at price {} (Total: {} KRW)",
+                side.equals("bid") ? "Buy" : "Sell",
+                volume,
+                market,
+                currentPrice,
+                volume * currentPrice
+        );
     }
 }

@@ -32,6 +32,11 @@
     </style>
 </head>
 <body>
+<!-- 새로고침 정보 표시 -->
+<div class="refresh-info">
+    Next refresh in: <span id="countdown" class="next-refresh">60</span> seconds
+</div>
+
 <div id="chartContainer" th:attr="data-analysis=${analysis}" style="padding: 20px;">
     <h1 th:text="${'Market Analysis: ' + market}">Market Analysis</h1>
 
@@ -78,7 +83,35 @@
 </div>
 
 <script>
+    function setupAutoRefresh() {
+        const REFRESH_INTERVAL = 60; // 60초(1분)
+        let countdown = REFRESH_INTERVAL;
+        const countdownDisplay = document.getElementById('countdown');
+
+        // 카운트다운 업데이트
+        function updateCountdown() {
+            countdown--;
+            countdownDisplay.textContent = countdown;
+
+            if (countdown <= 0) {
+                // URL에서 현재 파라미터 유지하면서 새로고침
+                window.location.reload();
+            }
+        }
+
+        // 1초마다 카운트다운 업데이트
+        setInterval(updateCountdown, 1000);
+
+        // 페이지가 백그라운드에 있을 때 타이머 일시 중지
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                countdown = REFRESH_INTERVAL; // 페이지 포커스 잃으면 카운트다운 리셋
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+        setupAutoRefresh();
         try {
             const container = document.getElementById('chartContainer');
             const analysisData = JSON.parse(container.dataset.analysis);
