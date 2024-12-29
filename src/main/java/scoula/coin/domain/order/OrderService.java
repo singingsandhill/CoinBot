@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.StringEntity;
@@ -298,5 +299,82 @@ public class OrderService {
                 .stream()
                 .map(OrderHistoryDTO::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 주문 조회 메서드
+     * @param market 마켓 ID (예: KRW-BTC)
+     * @param uuids 조회할 주문 UUID 목록 (선택적)
+     * @param page 페이지 번호
+     * @param limit 한 페이지당 개수
+     * @return 주문 목록
+     */
+    public Object getOrders(String market, List<String> uuids, Integer page, Integer limit) {
+        try {
+            // API 파라미터 설정
+            List<NameValuePair> queryParams = new ArrayList<>();
+            queryParams.add(new BasicNameValuePair("market", market));
+            queryParams.add(new BasicNameValuePair("limit", String.valueOf(limit != null ? limit : 100)));
+            queryParams.add(new BasicNameValuePair("page", String.valueOf(page != null ? page : 1)));
+            queryParams.add(new BasicNameValuePair("order_by", "desc"));
+            queryParams.add(new BasicNameValuePair("state", "done"));
+
+            // UUID 파라미터 추가
+            String uuidQuery = "";
+            if (uuids != null && !uuids.isEmpty()) {
+                uuidQuery = uuids.stream()
+                        .map(uuid -> "uuids[]=" + uuid)
+                        .collect(Collectors.joining("&"));
+            }
+
+            // 쿼리 문자열 생성
+            String query = URLEncodedUtils.format(queryParams, StandardCharsets.UTF_8);
+            if (!uuidQuery.isEmpty()) {
+                query = query + "&" + uuidQuery;
+            }
+
+            // 쿼리 해시 생성
+            MessageDigest md = MessageDigest.getInstance("SHA-512");
+            md.update(query.getBytes(StandardCharsets.UTF_8));
+            String queryHash = String.format("%0128x", new BigInteger(1, md.digest()));
+
+            // JWT 토큰 생성
+            Algorithm algorithm = Algorithm.HMAC256(secretKey);
+            String jwtToken = JWT.create()
+                    .withClaim("access_key", accessKey)
+                    .withClaim("nonce", UUID.randomUUID().toString())
+                    .withClaim("timestamp", System.currentTimeMillis())
+                    .withClaim("query_hash", queryHash)
+                    .withClaim("query_hash_alg", "SHA512")
+                    .sign(algorithm);
+
+            // API 호출
+            final HttpGet httpRequest = new HttpGet(baseUrl + "/v1/orders?" + query);
+            httpRequest.addHeader("Authorization", "Bearer " + jwtToken);
+            httpRequest.addHeader("Content-Type", "application/json");
+
+            try (CloseableHttpClient client = HttpClients.createDefault();
+                 CloseableHttpResponse response = client.execute(httpRequest)) {
+
+                int httpStatus = response.getStatusLine().getStatusCode();
+                String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+
+                log.debug("Orders API Response - Status: {}, Body: {}", httpStatus, responseBody);
+
+                if (httpStatus != 200) {
+                    throw new RuntimeException("Orders API failed with status " + httpStatus + ": " + responseBody);
+                }
+
+                JsonNode responseNode = objectMapper.readTree(responseBody);
+                List<OrderHistory> orders = new ArrayList<>();
+
+                // Response parsing
+
+                return responseNode;
+            }
+        } catch (Exception e) {
+            log.error("Failed to get orders: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to get orders", e);
+        }
     }
 }

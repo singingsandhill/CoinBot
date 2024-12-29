@@ -131,6 +131,8 @@ public class TradingService {
                 .signalType(signal)
                 .orderExecuted(false)  // 초기값
                 .build();
+        signalHistory = signalHistoryRepository.save(signalHistory);
+
         try {
             if (signal > 0) {  // Buy signal
                 executeBuyOrder(market, currentPrice, orderChance);
@@ -138,8 +140,11 @@ public class TradingService {
                 executeSellOrder(market, currentPrice, orderChance);
             }
             signalHistory.setOrderExecuted(true);
+            signalHistoryRepository.save(signalHistory);
         } catch (Exception e) {
             log.error("Error executing order: " + e.getMessage(), e);
+            signalHistory.setFailureReason(e.getMessage());
+            signalHistoryRepository.save(signalHistory);
             throw new RuntimeException("Failed to execute order", e);
         }
     }
@@ -147,7 +152,7 @@ public class TradingService {
     private void executeBuyOrder(String market, double currentPrice, OrderBookDTO orderChance) throws Exception {
         // Get KRW balance for buying
         BigDecimal availableBalance = orderChance.getBidAccount().getBalance();
-        BigDecimal minOrderSize = orderChance.getMarket().getBid().getMinTotal();
+        BigDecimal minOrderSize = BigDecimal.valueOf(5000.0);
 
         // Calculate order size (10% of available balance)
         BigDecimal orderSize = availableBalance.multiply(BigDecimal.valueOf(0.1))
