@@ -123,11 +123,14 @@ public class TechnicalIndicator {
         List<Integer> signals = new ArrayList<>();
         signals.add(0); // 첫 포인트는 신호 없음
 
-        for (int i = 0; i < prices.size(); i++) {
+        for (int i = 1; i < prices.size(); i++) {
             int signal = 0;
             double price = prices.get(i);
-            double lastRsi = rsi.get(i);
-            double macdValue = macd.size() > i ? macd.get(i) : 0;
+            double lastRsi = i < rsi.size() ? rsi.get(i) : 0.0;
+            double macdValue = macd.size() > i ? macd.get(i) : 0.0;
+
+            // 직전 MACD (i-1) 값
+            double prevMacd = (i - 1) < macd.size() ? macd.get(i - 1) : 0.0;
 
             // 볼린저 밴드 위치 계산
             double pricePosition = calculatePricePosition(prices.get(i),
@@ -135,15 +138,19 @@ public class TechnicalIndicator {
                     bollingerBands.get(2).get(i)  // lower
             );
 
-            boolean isAboveMidBand = price > bollingerBands.get(1).get(i);
-
             // 매수 신호 조건
-            if (lastRsi < 30 && pricePosition < 0.3 && macdValue > 0 && isAboveMidBand) {
-                signal = 1; // BUY
+            if (lastRsi < 30
+                    && pricePosition < 0.3
+                    && prevMacd < 0
+                    && macdValue > 0) {
+                signal = 1;  // BUY
             }
 
             // 매도 신호 조건
-            if (lastRsi > 70 && pricePosition > 0.7 && macdValue < 0 && !isAboveMidBand) {
+            if (lastRsi > 70
+                    && pricePosition > 0.7
+                    && prevMacd > 0
+                    && macdValue < 0) {
                 signal = -1; // SELL
             }
 
