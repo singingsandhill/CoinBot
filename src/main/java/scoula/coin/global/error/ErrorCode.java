@@ -19,6 +19,8 @@ public enum ErrorCode {
     ORDER_INVALID_VOLUME(HttpStatus.BAD_REQUEST, "ORDER_006", "유효하지 않은 거래량입니다."),
     ORDER_INVALID_PRICE(HttpStatus.BAD_REQUEST, "ORDER_007", "유효하지 않은 가격입니다."),
     ORDER_INVALID_RESPONSE(HttpStatus.INTERNAL_SERVER_ERROR, "ORDER_008", "응답 오류"),
+    ORDER_DELETION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ORDER_008", "주문 취소에 실패했습니다."),
+    ORDER_UUID_INVALID(HttpStatus.BAD_REQUEST, "ORDER_009", "유효하지 않은 주문 UUID입니다."),
 
     // System errors
     SYSTEM_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SYS_001", "시스템 오류가 발생했습니다.")

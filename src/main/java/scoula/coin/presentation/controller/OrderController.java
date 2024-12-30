@@ -1,5 +1,6 @@
 package scoula.coin.presentation.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,13 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    @DeleteMapping("/{uuid}")
+    public ResponseEntity<ApiResponse<JsonNode>> cancelOrder(@PathVariable String uuid) {
+        log.info("Order cancellation request - UUID: {}", uuid);
+        JsonNode result = orderService.cancelOrder(uuid);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
     @GetMapping("/history")
     public ResponseEntity<ApiResponse<?>> getOrderHistory(
             @RequestParam(required = false) String market) {
@@ -75,9 +83,10 @@ public class OrderController {
             @RequestParam(defaultValue = "KRW-BTC") String market,
             @RequestParam(required = false) List<String> uuids,
             @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "100") Integer limit
+            @RequestParam(required = false, defaultValue = "100") Integer limit,
+            @RequestParam(required = false, defaultValue = "done") String state
     ) {
-        Object orders = orderService.getOrders(market, uuids, page, limit);
+        Object orders = orderService.getOrders(market, uuids, page, limit,state);
         return ResponseEntity.ok(ApiResponse.success(orders));
     }
 }

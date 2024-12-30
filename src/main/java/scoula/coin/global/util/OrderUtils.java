@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.StringEntity;
@@ -165,6 +166,39 @@ public class OrderUtils {
         } catch (Exception e) {
             log.error("Failed to execute POST request: {}", e.getMessage());
             throw new CustomException(ErrorCode.ORDER_EXECUTION_FAILED);
+        }
+    }
+
+    /**
+     * delete 요청
+     * @param baseUrl : String
+     * @param endpoint : String
+     * @param queryParams : List<NameValuePair>
+     * @return : JsonNode
+     */
+    public JsonNode executeDeleteRequest(String baseUrl, String endpoint, List<NameValuePair> queryParams) {
+        try {
+            String query = URLEncodedUtils.format(queryParams, StandardCharsets.UTF_8);
+            String jwtToken = generateJwtToken(query);
+
+            final HttpDelete httpRequest = new HttpDelete(baseUrl + endpoint + "?" + query);
+            httpRequest.addHeader("Authorization", "Bearer " + jwtToken);
+            httpRequest.addHeader("Content-type", "application/json");
+
+            try (CloseableHttpClient client = HttpClients.createDefault();
+                 CloseableHttpResponse response = client.execute(httpRequest)) {
+
+                if (response.getStatusLine().getStatusCode() != HttpStatus.OK.value()) {
+                    log.error("Delete request failed with status: {}", response.getStatusLine().getStatusCode());
+                    throw new CustomException(ErrorCode.ORDER_DELETION_FAILED);
+                }
+
+                String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+                return objectMapper.readTree(responseBody);
+            }
+        } catch (Exception e) {
+            log.error("Failed to execute DELETE request: {}", e.getMessage());
+            throw new CustomException(ErrorCode.ORDER_DELETION_FAILED);
         }
     }
 }

@@ -14,6 +14,8 @@ import scoula.coin.domain.strategy.TechnicalIndicator;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -72,10 +74,77 @@ public class TradingService {
             boolean orderExecuted = false;
             String orderStatus = "No signal generated";
 
+            // 미체결 주문 확인 및 취소
+            JsonNode waitOrders = orderService.getOrders(market, null, 1, 10, "wait");
+            if (waitOrders.has("data") && waitOrders.get("data").isArray()) {
+                for (JsonNode order : waitOrders.get("data")) {
+                    String uuid = order.get("uuid").asText();
+
+                    // UUID로 시그널 이력 조회
+                    TradingSignalHistory signalHistory = signalHistoryRepository.findByOrderUuid(uuid)
+                            .orElse(null);
+
+                    if (signalHistory != null) {
+                        LocalDateTime orderTime = signalHistory.getCreatedAt();
+                        LocalDateTime now = LocalDateTime.now();
+
+                        // 주문 생성 후 3분이 지났는지 확인
+                        if (ChronoUnit.MINUTES.between(orderTime, now) >= 3) {
+                            log.info("Canceling unfilled order after 3 minutes - UUID: {}, Created At: {}",
+                                    uuid, orderTime);
+
+                            try {
+                                JsonNode cancelResult = orderService.cancelOrder(uuid);
+                                log.info("Order canceled successfully - UUID: {}", uuid);
+                                orderStatus = "Canceled unfilled order after 3 minutes: " + uuid;
+
+                                // 시그널 이력 업데이트
+                                signalHistory.setFailureReason("Order canceled after 3 minutes timeout");
+                                signalHistoryRepository.save(signalHistory);
+                            } catch (Exception e) {
+                                log.error("Failed to cancel order: {}", e.getMessage());
+                            }
+                        } else {
+                            log.debug("Order {} is still within 3-minute window. Created at: {}",
+                                    uuid, orderTime);
+                        }
+                    }
+                }
+            }
+
+            // 가격 모니터링 및 매도 주문 확인
+            double currentPrice = prices.get(prices.size() - 1);
+            JsonNode orders = orderService.getOrders(market, null, 1, 10,"done");
+
+            if (orders.has("data") && orders.get("data").isArray()) {
+                for (JsonNode order : orders.get("data")) {
+                    if ("bid".equals(order.get("side").asText()) && "done".equals(order.get("state").asText())) {
+                        double orderPrice = order.get("price").asDouble();
+                        double priceChange = (currentPrice - orderPrice) / orderPrice;
+
+                        if (Math.abs(priceChange) >= 0.05) {
+                            log.info("Price change detected - Order Price: {}, Current Price: {}, Change: {}%",
+                                    orderPrice, currentPrice, priceChange * 100);
+
+                            BigDecimal btcBalance = orderChance.getAskAccount().getBalance();
+                            if (btcBalance.compareTo(BigDecimal.ZERO) > 0) {
+                                try {
+                                    executeSellOrder(market, currentPrice, orderChance);
+                                    orderStatus = String.format("Take profit/Stop loss executed. Price change: %.2f%%", priceChange * 100);
+                                    log.info("Take profit/Stop loss order executed at price: {}", currentPrice);
+                                    orderExecuted = true;
+                                } catch (Exception e) {
+                                    log.error("Failed to execute take profit/stop loss order: {}", e.getMessage());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // 마지막 분봉의 신호에 대해서만 주문 실행
             if (!signals.isEmpty() && !prices.isEmpty()) {
                 int latestSignal = signals.get(signals.size() - 1);
-                double currentPrice = prices.get(prices.size() - 1);
                 double lastRsi = rsi.get(rsi.size() - 1);
 
                 if (latestSignal != 0) {
@@ -112,7 +181,6 @@ public class TradingService {
             throw new RuntimeException("Failed to analyze trading signals", e);
         }
     }
-
 
     private List<Double> extractPrices(List<CandleDTO> candles) {
         // 최신 데이터가 마지막에 오도록 정렬된 가격 리스트 반환

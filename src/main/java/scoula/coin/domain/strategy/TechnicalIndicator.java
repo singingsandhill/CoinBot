@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class TechnicalIndicator {
+
     public List<Double> calculateMACD(List<Double> prices, int fastPeriod, int slowPeriod, int signalPeriod) {
         if (prices.size() < slowPeriod) {
             return new ArrayList<>();

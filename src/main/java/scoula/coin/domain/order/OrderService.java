@@ -128,10 +128,10 @@ public class OrderService {
      * @param limit : Integer
      * @return : JsonNode
      */
-    public JsonNode getOrders(String market, List<String> uuids, Integer page, Integer limit) {
+    public JsonNode getOrders(String market, List<String> uuids, Integer page, Integer limit,String state) {
         try {
             validateMarket(market);
-            List<NameValuePair> queryParams = createOrderQueryParams(market, uuids, page, limit);
+            List<NameValuePair> queryParams = createOrderQueryParams(market, uuids, page, limit,state);
 
             return orderUtils.executeGetRequest(BASE_URL, "/v1/orders", queryParams);
         } catch (CustomException e) {
@@ -139,6 +139,46 @@ public class OrderService {
         } catch (Exception e) {
             log.error("Failed to get orders: {}", e.getMessage());
             throw new CustomException(ErrorCode.ORDER_EXECUTION_FAILED);
+        }
+    }
+
+    /**
+     * 주문 취소
+     * @param uuid : String
+     * @return : JsonNode
+     */
+    public JsonNode cancelOrder(String uuid) {
+        try {
+            validateUuid(uuid);
+
+            List<NameValuePair> queryParams = Collections.singletonList(
+                    new BasicNameValuePair("uuid", uuid)
+            );
+
+            JsonNode response = orderUtils.executeDeleteRequest(
+                    BASE_URL,
+                    "/v1/order",
+                    queryParams
+            );
+
+            log.info("Successfully canceled order with UUID: {}", uuid);
+            return response;
+
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to cancel order: {}", e.getMessage());
+            throw new CustomException(ErrorCode.ORDER_DELETION_FAILED);
+        }
+    }
+
+    /**
+     * UUID 유효성 검사
+     * @param uuid : String
+     */
+    private void validateUuid(String uuid) {
+        if (uuid == null || uuid.trim().isEmpty()) {
+            throw new CustomException(ErrorCode.ORDER_UUID_INVALID);
         }
     }
 
@@ -160,13 +200,13 @@ public class OrderService {
      * @param limit :  Integer
      * @return : List<NameValuePair>
      */
-    private List<NameValuePair> createOrderQueryParams(String market, List<String> uuids, Integer page, Integer limit) {
+    private List<NameValuePair> createOrderQueryParams(String market, List<String> uuids, Integer page, Integer limit,String state) {
         List<NameValuePair> queryParams = new ArrayList<>();
         queryParams.add(new BasicNameValuePair("market", market));
         queryParams.add(new BasicNameValuePair("limit", String.valueOf(limit != null ? limit : 100)));
         queryParams.add(new BasicNameValuePair("page", String.valueOf(page != null ? page : 1)));
         queryParams.add(new BasicNameValuePair("order_by", "desc"));
-        queryParams.add(new BasicNameValuePair("state", "done"));
+        queryParams.add(new BasicNameValuePair("state", state));
 
         if (uuids != null && !uuids.isEmpty()) {
             String uuidQuery = uuids.stream()
