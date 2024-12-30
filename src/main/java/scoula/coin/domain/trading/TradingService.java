@@ -224,6 +224,13 @@ public class TradingService {
         }
     }
 
+    /**
+     * 구매 주문
+     * @param market : String
+     * @param currentPrice : double
+     * @param orderChance : OrderBookDTO
+     * @throws Exception
+     */
     private void executeBuyOrder(String market, double currentPrice, OrderBookDTO orderChance) throws Exception {
         // Get KRW balance for buying
         BigDecimal availableBalance = orderChance.getBidAccount().getBalance();
@@ -253,6 +260,13 @@ public class TradingService {
         }
     }
 
+    /**
+     * 판매 주문
+     * @param market : String
+     * @param currentPrice : double
+     * @param orderChance : OrderBookDTO
+     * @throws Exception
+     */
     private void executeSellOrder(String market, double currentPrice, OrderBookDTO orderChance) throws Exception {
         // Get BTC balance
         BigDecimal btcBalance = orderChance.getAskAccount().getBalance();
