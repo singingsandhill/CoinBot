@@ -6,6 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import scoula.coin.application.dto.CandleDTO;
 import scoula.coin.application.dto.OrderBookDTO;
+import scoula.coin.application.dto.OrderHistoryDTO;
 import scoula.coin.application.entity.TradingSignalHistory;
 import scoula.coin.domain.market.CandleService;
 import scoula.coin.domain.order.OrderService;
@@ -35,11 +36,8 @@ public class TradingService {
     public Map<String, Object> analyzeTradingSignals(String market, int count) {
 
         try {
-            // 충분한 데이터를 위해 요청 개수를 늘림
             int extendedCount = count + 35; // RSI와 볼린저 밴드 계산을 위한 추가 데이터
             List<CandleDTO> candles = candleService.getCandle(market, extendedCount);
-
-            // 가격 데이터 추출 (최신 데이터가 마지막에 오도록 정렬)
             List<Double> prices = extractPrices(candles);
 
             // 최소 필요 데이터 확인
@@ -71,6 +69,7 @@ public class TradingService {
             List<Integer> signals = technicalIndicator.generateSignals(
                     prices,
                     rsi,
+                    macd,
                     trimmedBollingerBands
             );
 
@@ -228,7 +227,7 @@ public class TradingService {
     private void executeBuyOrder(String market, double currentPrice, OrderBookDTO orderChance) throws Exception {
         // Get KRW balance for buying
         BigDecimal availableBalance = orderChance.getBidAccount().getBalance();
-        BigDecimal minOrderSize = BigDecimal.valueOf(5000.0);
+        BigDecimal minOrderSize = BigDecimal.valueOf(10000.0);
 
         // Calculate order size (10% of available balance)
         BigDecimal orderSize = availableBalance.multiply(BigDecimal.valueOf(0.1))
@@ -272,10 +271,37 @@ public class TradingService {
                     btcBalance, MIN_BTC_ORDER);
             return;
         }
+        // Get last buy price from order history
+        List<OrderHistoryDTO> orderHistory = orderService.getOrderHistory(market);
+        if (orderHistory.isEmpty()) {
+            log.warn("No previous buy orders found for market: {}", market);
+            return;
+        }
+
+        // Assume the most recent buy order is the last executed buy
+        OrderHistoryDTO lastBuyOrder = orderHistory.stream()
+                .filter(order -> "bid".equals(order.getSide()))
+                .findFirst()
+                .orElse(null);
+
+        if (lastBuyOrder == null) {
+            log.warn("No previous buy orders found for market: {}", market);
+            return;
+        }
+
+        double lastBuyPrice = lastBuyOrder.getPrice().doubleValue();
+        double feeRate = orderChance.getAskFee().doubleValue(); // 매도 수수료 비율
+        double minimumSellPrice = lastBuyPrice * (1 + feeRate);
+
+        // Check if current price is greater than or equal to minimum sell price
+        if (currentPrice < minimumSellPrice) {
+            log.warn("Current price ({}) is less than minimum sell price ({}). Skipping sell order.",
+                    currentPrice, minimumSellPrice);
+            return;
+        }
 
         // Calculate 10% of BTC balance
-        BigDecimal tenPercentBTC = btcBalance.multiply(BigDecimal.valueOf(0.1))
-                .setScale(8, RoundingMode.DOWN);
+        BigDecimal tenPercentBTC = btcBalance.multiply(BigDecimal.valueOf(0.1)).setScale(8, RoundingMode.DOWN);
 
         // Use larger of 10% and minimum BTC order
         BigDecimal sellVolume = tenPercentBTC.max(MIN_BTC_ORDER);
