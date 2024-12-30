@@ -143,4 +143,20 @@ class OrderServiceTest {
     @Test
     void doOrder() {
     }
+
+    @Test
+    void getOrderChance() {
+    }
+
+    @Test
+    void testDoOrder() {
+    }
+
+    @Test
+    void getOrderHistory() {
+    }
+
+    @Test
+    void getOrders() {
+    }
 }

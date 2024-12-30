@@ -1,4 +1,4 @@
-package scoula.coin.domain.run.Repository;
+package scoula.coin.domain.order.Repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import scoula.coin.application.entity.OrderHistory;
