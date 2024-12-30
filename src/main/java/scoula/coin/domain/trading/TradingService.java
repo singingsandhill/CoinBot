@@ -30,7 +30,10 @@ public class TradingService {
     private final OrderService orderService;
     private final TradingSignalHistoryRepository signalHistoryRepository;
 
+    private Map<String, Object> latestAnalysisResult;
+
     public Map<String, Object> analyzeTradingSignals(String market, int count) {
+
         try {
             // 충분한 데이터를 위해 요청 개수를 늘림
             int extendedCount = count + 35; // RSI와 볼린저 밴드 계산을 위한 추가 데이터
@@ -114,7 +117,7 @@ public class TradingService {
 
             // 가격 모니터링 및 매도 주문 확인
             double currentPrice = prices.get(prices.size() - 1);
-            JsonNode orders = orderService.getOrders(market, null, 1, 10,"done");
+            JsonNode orders = orderService.getOrders(market, null, 1, 10, "done");
 
             if (orders.has("data") && orders.get("data").isArray()) {
                 for (JsonNode order : orders.get("data")) {
@@ -167,7 +170,7 @@ public class TradingService {
                 }
             }
 
-            return Map.of(
+            Map<String, Object> result = Map.of(
                     "prices", prices,
                     "macd", macd,
                     "rsi", rsi,
@@ -176,6 +179,11 @@ public class TradingService {
                     "orderExecuted", orderExecuted,
                     "orderStatus", orderStatus
             );
+
+            // 분석 결과를 캐시에 저장
+            this.latestAnalysisResult = result;
+            return result;
+
         } catch (Exception e) {
             log.error("Error in trading analysis: ", e);
             throw new RuntimeException("Failed to analyze trading signals", e);
@@ -304,4 +312,9 @@ public class TradingService {
             }
         }
     }
+
+    public Map<String, Object> getLatestAnalysisResult() {
+        return this.latestAnalysisResult;
+    }
+
 }

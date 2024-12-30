@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import scoula.coin.domain.market.CandleService;
 import scoula.coin.domain.trading.TradingService;
 
+import java.util.List;
 import java.util.Map;
 
 @Log4j2
@@ -33,7 +34,13 @@ public class ChartController {
             @RequestParam(defaultValue = "100") int count,
             Model model) throws JsonProcessingException {
 
-        Map<String, Object> analysis = tradingService.analyzeTradingSignals(market, count);
+        Map<String, Object> analysis = tradingService.getLatestAnalysisResult();
+
+        if (analysis == null) {
+            // 아직 스케줄링이 돌기 전이라면
+            analysis = tradingService.analyzeTradingSignals(market, count);
+        }
+
         String analysisJson = objectMapper.writeValueAsString(analysis);
 
         model.addAttribute("market", market);
