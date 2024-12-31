@@ -1,0 +1,16 @@
+scoula.coin
+scoula.coin.application.dto
+scoula.coin.application.entity
+scoula.coin.domain.chart
+scoula.coin.domain.market
+scoula.coin.domain.order
+scoula.coin.domain.order.Repository
+scoula.coin.domain.run.Repository
+scoula.coin.domain.run.Service
+scoula.coin.domain.strategy
+scoula.coin.domain.trading
+scoula.coin.global.config
+scoula.coin.global.error
+scoula.coin.global.util
+scoula.coin.presentation.controller
+scoula.coin.presentation.handler
