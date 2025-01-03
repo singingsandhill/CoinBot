@@ -7,8 +7,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * 지표 계산하는 서비스 계층
+ */
 public class TechnicalIndicator {
 
+    /**
+     * 장단기 이동평균선간의 차이 계산
+     * @param prices : List<Double>
+     * @param fastPeriod : int
+     * @param slowPeriod : int
+     * @param signalPeriod : int
+     * @return : List<Double>
+     */
     public List<Double> calculateMACD(List<Double> prices, int fastPeriod, int slowPeriod, int signalPeriod) {
         if (prices.size() < slowPeriod) {
             return new ArrayList<>();
@@ -52,6 +63,12 @@ public class TechnicalIndicator {
         return ema;
     }
 
+    /**
+     * 상대강도지수 계산
+     * @param prices : List<Double>
+     * @param period : int
+     * @return : List<Double>
+     */
     public List<Double> calculateRSI(List<Double> prices, int period) {
         if (prices.size() < period + 1) {
             return new ArrayList<>();

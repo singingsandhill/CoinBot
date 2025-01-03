@@ -21,6 +21,9 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+/**
+ * 주문 관련 서비스 계층
+ */
 public class OrderService {
 
     private final String BASE_URL  = "https://api.bithumb.com";
