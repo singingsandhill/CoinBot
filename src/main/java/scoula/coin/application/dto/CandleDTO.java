@@ -7,6 +7,9 @@ import lombok.Setter;
 
 @Getter @Setter
 @RequiredArgsConstructor
+/**
+ * API에서 불러오는 시장 정보
+ */
 public class CandleDTO {
     private String market;
     private String candleDateTimeUtc;

@@ -24,6 +24,9 @@ import java.util.*;
 @Log4j2
 @Service
 @RequiredArgsConstructor
+/**
+ * API에서 정보 불러오는 서비스 계층
+ */
 public class CandleService {
 
     private String baseUrl = "https://api.bithumb.com/v1/candles/minutes/1";
@@ -35,6 +38,12 @@ public class CandleService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    /**
+     * API로 1분봉 단위로 불러옴
+     * @param market : String 코인 코드
+     * @param count : int 분봉 수
+     * @return : List<CandleDTO>
+     */
     public List<CandleDTO> getCandle(String market, int count){
         try {
             // Generate access token using JWT
