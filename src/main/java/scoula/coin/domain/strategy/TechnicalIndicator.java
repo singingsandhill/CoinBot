@@ -110,6 +110,13 @@ public class TechnicalIndicator {
         return rsi;
     }
 
+    /**
+     * 볼린저 밴드 계산
+     * @param prices : List<Double>
+     * @param period : int
+     * @param stdDev : double
+     * @return : List<List<Double>>
+     */
     public List<List<Double>> calculateBollingerBands(List<Double> prices, int period, double stdDev) {
         if (prices.size() < period) {
             return List.of(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
@@ -136,6 +143,14 @@ public class TechnicalIndicator {
         return List.of(upperBand, sma, lowerBand);
     }
 
+    /**
+     * 거래 신호 생성
+     * @param prices
+     * @param rsi
+     * @param macd
+     * @param bollingerBands
+     * @return
+     */
     public List<Integer> generateSignals(List<Double> prices, List<Double> rsi, List<Double> macd, List<List<Double>> bollingerBands) {
         List<Integer> signals = new ArrayList<>();
         signals.add(0); // 첫 포인트는 신호 없음
@@ -241,7 +256,13 @@ public class TechnicalIndicator {
         return prices.get(currentIndex) - prices.get(currentIndex - period);
     }
 
-    // 볼린저 밴드 내에서의 가격 위치 계산 (0~1 사이 값)
+    /**
+     * 볼린저 밴드 내에서의 가격 위치 계산 (0~1 사이 값)
+     * @param price : double
+     * @param upper : double
+     * @param lower : double
+     * @return : double
+     */
     private double calculatePricePosition(double price, double upper, double lower) {
         return (price - lower) / (upper - lower);
     }
