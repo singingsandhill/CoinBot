@@ -9,11 +9,18 @@ import scoula.coin.domain.trading.TradingService;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+/**
+ * 스케쥴러
+ */
 public class TradingScheduler {
     private final TradingService tradingService;
 
     //  1분마다 실행되는 스케줄러 (60,000ms)
     @Scheduled(fixedRate = 60_000)
+    /**
+     * 1분마다 자동 실행 되도록 설정.
+     * analyzeTradingSignals 실행
+     */
     public void scheduledAnalyzeTradingSignals() {
         try {
             tradingService.analyzeTradingSignals("KRW-BTC", 100);
