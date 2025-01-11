@@ -33,6 +33,12 @@ public class TradingService {
 
     private Map<String, Object> latestAnalysisResult;
 
+    /**
+     * 매매 신호를 생성하기 위한 분석
+     * @param market : KRW-BTC (코인 마켓)
+     * @param count : 분봉 수
+     * @return
+     */
     public Map<String, Object> analyzeTradingSignals(String market, int count) {
 
         try {
@@ -189,6 +195,11 @@ public class TradingService {
         }
     }
 
+    /**
+     * 가격 시간순으로 정렬
+     * @param candles
+     * @return
+     */
     private List<Double> extractPrices(List<CandleDTO> candles) {
         // 최신 데이터가 마지막에 오도록 정렬된 가격 리스트 반환
         List<Double> prices = new ArrayList<>();

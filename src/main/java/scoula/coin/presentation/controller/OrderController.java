@@ -20,6 +20,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/coin/orders")
 @RequiredArgsConstructor
+/**
+ * 주문 관련 controller
+ */
 public class OrderController {
     private final OrderService orderService;
     private final TradingSignalHistoryRepository tradingSignalHistoryRepository;

@@ -10,6 +10,9 @@ import scoula.coin.application.dto.ApiResponse;
 
 @Slf4j
 @RestControllerAdvice
+/**
+ * 전역 예외 처리
+ */
 public class GlobalExceptionHandler {
     // CustomException 처리
     @ExceptionHandler(CustomException.class)

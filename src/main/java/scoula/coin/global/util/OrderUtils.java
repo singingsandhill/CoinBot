@@ -36,6 +36,9 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+/**
+ * 주문 관련 메서드
+ */
 public class OrderUtils {
 
     private final ObjectMapper objectMapper;
