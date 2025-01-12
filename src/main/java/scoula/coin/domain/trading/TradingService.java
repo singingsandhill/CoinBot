@@ -210,6 +210,13 @@ public class TradingService {
         return prices;
     }
 
+    /**
+     * 주문 실행
+     * @param market : KRW-BTC (코인 마켓)
+     * @param signal
+     * @param currentPrice
+     * @param orderChance
+     */
     private void executeOrder(String market, int signal, double currentPrice, OrderBookDTO orderChance) {
         TradingSignalHistory signalHistory = TradingSignalHistory.builder()
                 .market(market)
@@ -345,6 +352,15 @@ public class TradingService {
         executeOrderRequest(market, "ask", sellVolume.doubleValue(), currentPrice);
     }
 
+    /**
+     * 주문 실행
+     * 매수, 매도 매서드 내에서 실행됨
+     * @param market : KRW-BTC (코인 마켓)
+     * @param side
+     * @param volume
+     * @param price
+     * @throws Exception
+     */
     private void executeOrderRequest(String market, String side, double volume, double price) throws Exception {
         Object orderResult = orderService.doOrder(market, side, volume, price, "limit");
         // orderResult에서 UUID 추출하여 시그널 이력 업데이트
@@ -364,6 +380,10 @@ public class TradingService {
         }
     }
 
+    /**
+     * getter
+     * @return
+     */
     public Map<String, Object> getLatestAnalysisResult() {
         return this.latestAnalysisResult;
     }
