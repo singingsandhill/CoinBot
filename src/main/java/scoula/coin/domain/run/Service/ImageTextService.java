@@ -12,6 +12,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Service
+/**
+ * 정규런 공지 사진 만드는 서비스 계층
+ * 이미지에 글씨 입히기
+ */
 public class ImageTextService {
     public byte[] addTextToImage(byte[] originalImage, LocalDateTime dateTime, String location) throws IOException {
         // Convert byte array to BufferedImage
