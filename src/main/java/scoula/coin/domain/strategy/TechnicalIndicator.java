@@ -171,7 +171,7 @@ public class TechnicalIndicator {
             );
 
             // 매수 신호 조건
-            if (lastRsi < 30
+            if (lastRsi <= 30
                     && pricePosition < 0.3
                     && prevMacd < 0
                     && macdValue > 0) {
@@ -179,7 +179,7 @@ public class TechnicalIndicator {
             }
 
             // 매도 신호 조건
-            if (lastRsi > 70
+            if (lastRsi >= 70
                     && pricePosition > 0.7
                     && prevMacd > 0
                     && macdValue < 0) {
