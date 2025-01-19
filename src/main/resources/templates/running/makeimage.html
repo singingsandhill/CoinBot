@@ -49,13 +49,43 @@
   <h2>이미지 텍스트 추가</h2>
   <form th:action="@{/running/modify}" method="post" enctype="multipart/form-data">
     <div class="form-group">
-      <label for="image">이미지 선택:</label>
-      <input type="file"
-             id="image"
-             name="image"
-             accept="image/*"
-             required
-             onchange="previewImage(this);">
+      <label id="imagepath">이미지 업로드 해놨음! 시간과 날짜만 수정</label>
+<!--      <input type="file"-->
+<!--             id="image"-->
+<!--             name="image"-->
+<!--             accept="image/*"-->
+<!--             required-->
+<!--             onchange="previewImage(this);">-->
+    </div>
+
+    <div class="form-group">
+      <label for="fontName">글씨체:</label>
+      <select id="fontName" name="fontName" required>
+        <!-- JavaScript로 동적으로 폰트 목록 추가 -->
+      </select>
+      <div class="font-preview" id="fontPreview">
+        글씨체 미리보기 텍스트
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="fontSize">글씨 크기:</label>
+      <input type="number"
+             id="fontSize"
+             name="fontSize"
+             value="50"
+             min="10"
+             max="200"
+             required>
+    </div>
+
+    <div class="form-group">
+      <label for="fontColor">글씨 색상:</label>
+      <input type="color"
+             id="fontColor"
+             name="fontColor"
+             value="#FFFFFF"
+             required>
     </div>
 
     <div class="form-group">
@@ -93,6 +123,47 @@
       reader.readAsDataURL(input.files[0]);
     }
   }
+
+  // 페이지 로드 시 사용 가능한 폰트 목록 가져오기
+  document.addEventListener('DOMContentLoaded', async function() {
+    try {
+      const response = await fetch('/running/available-fonts');
+      const fonts = await response.json();
+      const fontSelect = document.getElementById('fontName');
+
+      fonts.forEach(font => {
+        const option = document.createElement('option');
+        option.value = font;
+        option.textContent = font;
+        option.style.fontFamily = font;
+        fontSelect.appendChild(option);
+      });
+    } catch (error) {
+      console.error('폰트 목록을 불러오는데 실패했습니다:', error);
+    }
+  });
+
+  // 폰트 미리보기 업데이트
+  function updateFontPreview() {
+    const preview = document.getElementById('fontPreview');
+    const fontName = document.getElementById('fontName').value;
+    const fontSize = document.getElementById('fontSize').value;
+    const fontColor = document.getElementById('fontColor').value;
+
+    preview.style.fontFamily = fontName;
+    preview.style.fontSize = fontSize + 'px';
+    preview.style.color = fontColor;
+  }
+
+  // 폰트 관련 입력값 변경 시 미리보기 업데이트
+  document.getElementById('fontName').addEventListener('change', updateFontPreview);
+  document.getElementById('fontSize').addEventListener('input', updateFontPreview);
+  document.getElementById('fontColor').addEventListener('input', updateFontPreview);
+  
+  document.getElementById('imagePath').addEventListener('change', function() {
+    var preview = document.getElementById('imagePreview');
+    preview.src = '/images/bg.png';
+  });
 
   // 현재 날짜와 시간을 기본값으로 설정
   document.addEventListener('DOMContentLoaded', function() {

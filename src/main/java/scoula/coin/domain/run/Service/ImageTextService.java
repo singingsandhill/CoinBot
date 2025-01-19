@@ -10,6 +10,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.List;
 
 @Service
 /**
@@ -17,7 +19,8 @@ import java.time.format.DateTimeFormatter;
  * 이미지에 글씨 입히기
  */
 public class ImageTextService {
-    public byte[] addTextToImage(byte[] originalImage, LocalDateTime dateTime, String location) throws IOException {
+    public byte[] addTextToImage(byte[] originalImage, LocalDateTime dateTime, String location, String fontName, int fontSize,
+                                 String fontColor) throws IOException {
         // Convert byte array to BufferedImage
         ByteArrayInputStream bais = new ByteArrayInputStream(originalImage);
         BufferedImage image = ImageIO.read(bais);
@@ -41,8 +44,8 @@ public class ImageTextService {
                 RenderingHints.VALUE_TEXT_ANTIALIAS_ON
         );
 
-        // Set font
-        Font font = new Font("Arial", Font.BOLD, 50);
+        // 글씨체 설정
+        Font font = new Font(fontName, Font.BOLD, fontSize);
         g2d.setFont(font);
         g2d.setColor(Color.WHITE);
 
@@ -70,6 +73,12 @@ public class ImageTextService {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(newImage, "PNG", baos);
         return baos.toByteArray();
+    }
+
+    // 사용 가능한 글씨체 목록 반환
+    public List<String> getAvailableFonts() {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        return Arrays.asList(ge.getAvailableFontFamilyNames());
     }
 
 }
