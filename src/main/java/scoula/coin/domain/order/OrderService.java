@@ -70,6 +70,8 @@ public class OrderService {
 
     /**
      * 주문 생성
+     * TODO : test
+     *  어떤 차이가 있는가.
      * @param market : String
      * @param side : String
      * @param volume : double
@@ -77,6 +79,7 @@ public class OrderService {
      * @param ordType : String
      * @return : OrderHistory
      */
+
     public OrderHistory doOrder(String market, String side, double volume, double price, String ordType) {
         try {
             validateOrderParameters(market, side, volume, price, ordType);
