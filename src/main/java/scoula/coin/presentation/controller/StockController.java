@@ -17,4 +17,13 @@ public class StockController {
     public String generatetoken() {
         return null;
     }
+
+    /**
+     * 계좌의 잔고를 조회
+     * @return
+     */
+    @GetMapping("/valance")
+    public String getValance() {
+        return null;
+    }
 }
