@@ -26,4 +26,13 @@ public class StockController {
     public String getValance() {
         return null;
     }
+
+    /**
+     * 특정 종목 정보 불러오기
+     * @return
+     */
+    @GetMapping("/info")
+    public String getInfo() {
+        return null;
+    }
 }
