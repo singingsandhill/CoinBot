@@ -266,4 +266,10 @@ public class TechnicalIndicator {
     private double calculatePricePosition(double price, double upper, double lower) {
         return (price - lower) / (upper - lower);
     }
+
+    /**
+     * TODO :
+     *  1. 분봉 정보 DB화
+     *  2. order history 차트에 그리기
+     */
 }

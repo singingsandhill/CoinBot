@@ -14,4 +14,8 @@ public class StockService {
     public ApiResponse getValance(String symbol) {
         return null;
     }
+
+    public ApiResponse getStockInfo(String symbol) {
+        return null;
+    }
 }
