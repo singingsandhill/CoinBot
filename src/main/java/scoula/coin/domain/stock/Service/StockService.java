@@ -18,4 +18,13 @@ public class StockService {
     public ApiResponse getStockInfo(String symbol) {
         return null;
     }
+
+    /**
+     * JSON 데이터 차트로 그리기
+     * @param symbol
+     * @return
+     */
+    public Object Chart(String symbol) {
+        return null;
+    }
 }
