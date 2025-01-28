@@ -75,7 +75,12 @@ public class ImageTextService {
         return baos.toByteArray();
     }
 
-    // 사용 가능한 글씨체 목록 반환
+    /**
+     * 사용 가능한 글씨체 목록 반환
+     * 글씨체 바꾸는 데 사용
+     * @return
+     */
+
     public List<String> getAvailableFonts() {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         return Arrays.asList(ge.getAvailableFontFamilyNames());
