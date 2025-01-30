@@ -12,10 +12,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import scoula.coin.domain.market.CandleService;
+import scoula.coin.domain.order.OrderService;
 import scoula.coin.domain.trading.TradingService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Log4j2
 @Controller
@@ -26,6 +28,7 @@ public class ChartController {
     private final CandleService candleService;
     private final TradingService tradingService;
     private final ObjectMapper objectMapper;
+    private final OrderService orderService;
 
     @Operation(summary = "chart화면", description = "API로 candle차트 불러와서 지표 계산")
     @GetMapping("/chart")
@@ -42,12 +45,20 @@ public class ChartController {
         }
 
         String analysisJson = objectMapper.writeValueAsString(analysis);
+        Optional<?> startDate = orderService.getStartDate();
+        Optional<?> numBid = orderService.getNumBid();
+        Optional<?> numAsk = orderService.getNumAsk();     // 매도 count (예시)
+        Optional<?> profit = orderService.caclTradingResult();
 
         model.addAttribute("market", market);
         model.addAttribute("count", count);
         model.addAttribute("analysis", analysisJson);
         model.addAttribute("orderExecuted", analysis.get("orderExecuted"));
         model.addAttribute("orderStatus", analysis.get("orderStatus"));
+        model.addAttribute("startDate", startDate);
+        model.addAttribute("numBid", numBid);
+        model.addAttribute("numAsk", numAsk);
+        model.addAttribute("caclTradingResult", profit);
 
         return "market/chart";
     }

@@ -338,5 +338,24 @@ public class OrderService {
         return result;
     }
 
+    public Optional caclTradingResult() {
+        Optional result = orderHistoryRepository.caclTradingResult();
+        return result;
+    }
+
+    public Optional getStartDate(){
+        Optional result = orderHistoryRepository.getStartDate();
+        return result;
+    }
+
+    public Optional getNumBid(){
+        Optional result = orderHistoryRepository.getNumofBid();
+        return result;
+    }
+
+    public Optional getNumAsk(){
+        Optional result = orderHistoryRepository.getNumofAsk();
+        return result;
+    }
 
 }

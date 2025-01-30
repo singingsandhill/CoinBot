@@ -6,14 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import scoula.coin.application.dto.ApiResponse;
+import scoula.coin.application.dto.OrderHistoryDTO;
 import scoula.coin.application.dto.TradingSignalHistoryDTO;
 import scoula.coin.application.entity.TradingSignalHistory;
 import scoula.coin.domain.order.OrderService;
-import scoula.coin.application.dto.OrderHistoryDTO;
 import scoula.coin.domain.run.Repository.TradingSignalHistoryRepository;
 
-import java.util.stream.Collectors;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -89,7 +90,33 @@ public class OrderController {
             @RequestParam(required = false, defaultValue = "100") Integer limit,
             @RequestParam(required = false, defaultValue = "done") String state
     ) {
-        Object orders = orderService.getOrders(market, uuids, page, limit,state);
+        Object orders = orderService.getOrders(market, uuids, page, limit, state);
         return ResponseEntity.ok(ApiResponse.success(orders));
     }
+
+    @GetMapping("/result")
+    public ResponseEntity<ApiResponse<?>> getOrderResults() {
+        Optional result = orderService.caclTradingResult();
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @GetMapping("/startdate")
+    public ResponseEntity<ApiResponse<?>> getOrderStartDate() {
+        Optional result = orderService.getStartDate();
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @GetMapping("/numbid")
+    public ResponseEntity<ApiResponse<?>> getOrderBidNum() {
+        Optional result = orderService.getNumBid();
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @GetMapping("/numask")
+    public ResponseEntity<ApiResponse<?>> getOrderNumAsk() {
+        Optional result = orderService.getNumAsk();
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+
 }
