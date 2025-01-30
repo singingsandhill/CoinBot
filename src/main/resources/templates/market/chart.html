@@ -13,11 +13,13 @@
             border: 1px solid #ddd;
             border-radius: 8px;
         }
+
         .chart-wrapper {
             position: relative;
             height: 400px;
             margin-bottom: 30px;
         }
+
         /* 차트 캔버스에 대한 명시적 스타일 추가 */
         canvas {
             width: 100% !important;
@@ -25,9 +27,15 @@
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -35,6 +43,14 @@
 <!-- 새로고침 정보 표시 -->
 <div class="refresh-info">
     Next refresh in: <span id="countdown" class="next-refresh">60</span> seconds
+</div>
+
+<div class="metrics-container">
+    <h2>Order Summary</h2>
+    <p>시작 날짜: <span th:text="${startDate}"></span></p>
+    <p>매수 횟수: <span th:text="${numBid}"></span></p>
+    <p>매도 횟수: <span th:text="${numAsk}"></span></p>
+    <p>수익 금액: <span th:text="${profit}"></span></p>
 </div>
 
 <div id="chartContainer" th:attr="data-analysis=${analysis}" style="padding: 20px;">
@@ -45,7 +61,8 @@
         <div class="status-box" th:classappend="${orderExecuted ? 'success' : 'warning'}">
             <h3>Order Status</h3>
             <p class="status-message" th:text="${orderStatus}">Order status message</p>
-            <p class="timestamp">Last updated: <span th:text="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd HH:mm:ss')}"></span></p>
+            <p class="timestamp">Last updated: <span
+                    th:text="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd HH:mm:ss')}"></span></p>
         </div>
     </div>
 
@@ -74,12 +91,12 @@
     </div>
 
     <!-- Trading Signals Chart -->
-<!--    <div class="chart-container">-->
-<!--        <h2>Trading Signals</h2>-->
-<!--        <div class="chart-wrapper">-->
-<!--            <canvas id="signalChart"></canvas>-->
-<!--        </div>-->
-<!--    </div>-->
+    <!--    <div class="chart-container">-->
+    <!--        <h2>Trading Signals</h2>-->
+    <!--        <div class="chart-wrapper">-->
+    <!--            <canvas id="signalChart"></canvas>-->
+    <!--        </div>-->
+    <!--    </div>-->
 </div>
 
 <script>
@@ -103,14 +120,14 @@
         setInterval(updateCountdown, 1000);
 
         // 페이지가 백그라운드에 있을 때 타이머 일시 중지
-        document.addEventListener('visibilitychange', function() {
+        document.addEventListener('visibilitychange', function () {
             if (document.hidden) {
                 countdown = REFRESH_INTERVAL; // 페이지 포커스 잃으면 카운트다운 리셋
             }
         });
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         setupAutoRefresh();
         try {
             const container = document.getElementById('chartContainer');
@@ -129,7 +146,7 @@
             }
 
             // timestamps 생성 (현재는 데이터 포인트의 인덱스를 사용)
-            const timestamps = Array.from({ length: analysisData.prices.length }, (_, i) => i);
+            const timestamps = Array.from({length: analysisData.prices.length}, (_, i) => i);
 
             // Price Chart with Bollinger Bands
             new Chart(document.getElementById('priceChart').getContext('2d'), {
@@ -162,17 +179,17 @@
                         fill: false,
                         yAxisID: 'y'
                     }
-                    , {
-                        label: 'Trading Signals',
-                        type: 'bar',
-                        data: analysisData.signals,
+                        , {
+                            label: 'Trading Signals',
+                            type: 'bar',
+                            data: analysisData.signals,
                             backgroundColor: analysisData.signals.map(signal =>
-                            signal > 0 ? 'rgba(75, 192, 192, 0.5)' :
-                           signal < 0 ? 'rgba(255, 99, 132, 0.5)' :
-                                       'rgba(201, 203, 207, 0.5)'
-                        ),
-                           yAxisID: 'y1'
-                    }
+                                signal > 0 ? 'rgba(75, 192, 192, 0.5)' :
+                                    signal < 0 ? 'rgba(255, 99, 132, 0.5)' :
+                                        'rgba(201, 203, 207, 0.5)'
+                            ),
+                            yAxisID: 'y1'
+                        }
                     ]
                 },
                 options: {
@@ -199,18 +216,18 @@
                             }
                         },
                         y1: {
-                           type: 'linear',
-                           display: true,
-                           position: 'right',
-                           title: {
-                               display: true,
-                               text: 'Signal'
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Signal'
                             },
-                           grid: {
-                               drawOnChartArea: false
-                           },
-                           min: -2,
-                           max: 2
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            min: -2,
+                            max: 2
                         }
                     }
                 }
@@ -247,7 +264,7 @@
                         },
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     return `MACD: ${context.raw.toFixed(2)}`;
                                 }
                             }
