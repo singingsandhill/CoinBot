@@ -47,7 +47,7 @@
 
 <div class="metrics-container">
     <h2>Order Summary</h2>
-    <p>시작 날짜: <span th:text="${startDate}"></span> / 매수 횟수: <span th:text="${numBid}"></span> / 매도 횟수: <span th:text="${numAsk}"></span> / 수익 금액: <span th:text="${profit}"></span></p>
+    <p>시작 날짜: <span th:text="${startDate}"></span> / 매수 횟수: <span th:text="${numBid}"></span> / 매도 횟수: <span th:text="${numAsk}"></span> / 수익 금액: <span th:text="${caclTradingResult}"></span></p>
 </div>
 
 <div id="chartContainer" th:attr="data-analysis=${analysis}" style="padding: 20px;">
