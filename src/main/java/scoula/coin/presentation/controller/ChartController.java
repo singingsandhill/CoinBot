@@ -15,6 +15,8 @@ import scoula.coin.domain.market.CandleService;
 import scoula.coin.domain.order.OrderService;
 import scoula.coin.domain.trading.TradingService;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,10 +47,10 @@ public class ChartController {
         }
 
         String analysisJson = objectMapper.writeValueAsString(analysis);
-        Optional<?> startDate = orderService.getStartDate();
-        Optional<?> numBid = orderService.getNumBid();
-        Optional<?> numAsk = orderService.getNumAsk();     // 매도 count (예시)
-        Optional<?> profit = orderService.caclTradingResult();
+        LocalDateTime startDate = (LocalDateTime) orderService.getStartDate().orElse(null);
+        Long numBid = (Long) orderService.getNumBid().orElse(0L);
+        Long numAsk = (Long) orderService.getNumAsk().orElse(0L);     // 매도 count (예시)
+        BigDecimal profit = (BigDecimal) orderService.caclTradingResult().orElse(BigDecimal.ZERO);
 
         model.addAttribute("market", market);
         model.addAttribute("count", count);

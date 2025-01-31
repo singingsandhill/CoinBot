@@ -47,7 +47,8 @@
 
 <div class="metrics-container">
     <h2>Order Summary</h2>
-    <p>시작 날짜: <span th:text="${startDate}"></span> / 매수 횟수: <span th:text="${numBid}"></span> / 매도 횟수: <span th:text="${numAsk}"></span> / 수익 금액: <span th:text="${caclTradingResult}"></span></p>
+    <p>시작 날짜: <span th:text="${startDate}"></span> / 매수 횟수: <span th:text="${numBid}"></span> / 매도 횟수: <span
+            th:text="${numAsk}"></span> / 수익 금액: <span th:text="${caclTradingResult}"></span></p>
 </div>
 
 <div id="chartContainer" th:attr="data-analysis=${analysis}" style="padding: 20px;">
@@ -63,37 +64,22 @@
         </div>
     </div>
 
-    <!-- Price Chart with Bollinger Bands -->
-    <div class="chart-container">
-        <h2>Price & Bollinger Bands</h2>
+    <!-- 2개의 차트를 상하로 배치 -->
+    <div class="chart-section">
+
+        <!-- (1) 상단: 가격 + 볼린저밴드 + 시그널 차트 -->
         <div class="chart-wrapper">
+            <div class="chart-title">Price & Bollinger Bands</div>
             <canvas id="priceChart"></canvas>
         </div>
-    </div>
 
-    <!-- MACD Chart -->
-    <div class="chart-container">
-        <h2>MACD</h2>
+        <!-- (2) 하단: MACD + RSI 차트 -->
         <div class="chart-wrapper">
-            <canvas id="macdChart"></canvas>
+            <div class="chart-title">MACD & RSI</div>
+            <canvas id="indicatorChart"></canvas>
         </div>
-    </div>
 
-    <!-- RSI Chart -->
-    <div class="chart-container">
-        <h2>RSI</h2>
-        <div class="chart-wrapper">
-            <canvas id="rsiChart"></canvas>
-        </div>
     </div>
-
-    <!-- Trading Signals Chart -->
-    <!--    <div class="chart-container">-->
-    <!--        <h2>Trading Signals</h2>-->
-    <!--        <div class="chart-wrapper">-->
-    <!--            <canvas id="signalChart"></canvas>-->
-    <!--        </div>-->
-    <!--    </div>-->
 </div>
 
 <script>
@@ -127,80 +113,70 @@
     document.addEventListener('DOMContentLoaded', function () {
         setupAutoRefresh();
         try {
+            // analysisData는 Controller에서 JSON 문자열로 변환해 ${analysis}로 넘긴 값
             const container = document.getElementById('chartContainer');
             const analysisData = JSON.parse(container.dataset.analysis);
 
-            // Handle order status display
-            if (analysisData.orderExecuted !== undefined) {
-                const statusBox = document.querySelector('.status-box');
-                if (statusBox) {
-                    if (analysisData.signals &&
-                        analysisData.signals.length > 0 &&
-                        analysisData.signals[analysisData.signals.length - 1] !== 0) {
-                        statusBox.classList.add('order-status-highlight');
-                    }
-                }
-            }
+            // timestamps (데이터 갯수만큼 인덱스로 생성)
+            const timestamps = Array.from({ length: analysisData.prices.length }, (_, i) => i);
 
-            // timestamps 생성 (현재는 데이터 포인트의 인덱스를 사용)
-            const timestamps = Array.from({length: analysisData.prices.length}, (_, i) => i);
-
-            // Price Chart with Bollinger Bands
-            new Chart(document.getElementById('priceChart').getContext('2d'), {
+            // (A) 상단 차트: 가격, 볼린저밴드, 시그널
+            const priceCtx = document.getElementById('priceChart').getContext('2d');
+            new Chart(priceCtx, {
                 type: 'line',
                 data: {
                     labels: timestamps,
-                    datasets: [{
-                        label: 'Price',
-                        data: analysisData.prices,
-                        borderColor: 'rgb(255, 99, 132)',
-                        fill: false,
-                        yAxisID: 'y'
-                    }, {
-                        label: 'Upper Band',
-                        data: analysisData.bollingerBands[0],
-                        borderColor: 'rgba(54, 162, 235, 0.5)',
-                        fill: false,
-                        yAxisID: 'y'
-                    }, {
-                        label: 'Middle Band',
-                        data: analysisData.bollingerBands[1],
-                        borderColor: 'rgba(54, 162, 235, 0.5)',
-                        borderDash: [5, 5],
-                        fill: false,
-                        yAxisID: 'y'
-                    }, {
-                        label: 'Lower Band',
-                        data: analysisData.bollingerBands[2],
-                        borderColor: 'rgba(54, 162, 235, 0.5)',
-                        fill: false,
-                        yAxisID: 'y'
-                    }
-                        , {
+                    datasets: [
+                        {
+                            label: 'Price',
+                            data: analysisData.prices,
+                            borderColor: 'rgb(255, 99, 132)',
+                            fill: false,
+                            yAxisID: 'y',
+                        },
+                        {
+                            label: 'Upper Band',
+                            data: analysisData.bollingerBands[0],
+                            borderColor: 'rgba(54, 162, 235, 0.7)',
+                            fill: false,
+                            yAxisID: 'y',
+                        },
+                        {
+                            label: 'Middle Band',
+                            data: analysisData.bollingerBands[1],
+                            borderColor: 'rgba(54, 162, 235, 0.7)',
+                            borderDash: [5, 5],
+                            fill: false,
+                            yAxisID: 'y',
+                        },
+                        {
+                            label: 'Lower Band',
+                            data: analysisData.bollingerBands[2],
+                            borderColor: 'rgba(54, 162, 235, 0.7)',
+                            fill: false,
+                            yAxisID: 'y',
+                        },
+                        {
                             label: 'Trading Signals',
                             type: 'bar',
                             data: analysisData.signals,
                             backgroundColor: analysisData.signals.map(signal =>
-                                signal > 0 ? 'rgba(75, 192, 192, 0.5)' :
-                                    signal < 0 ? 'rgba(255, 99, 132, 0.5)' :
-                                        'rgba(201, 203, 207, 0.5)'
+                                signal > 0
+                                    ? 'rgba(75, 192, 192, 0.5)'
+                                    : signal < 0
+                                        ? 'rgba(255, 99, 132, 0.5)'
+                                        : 'rgba(201, 203, 207, 0.5)'
                             ),
-                            yAxisID: 'y1'
-                        }
-                    ]
+                            yAxisID: 'y1',
+                        },
+                    ],
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: {
                         intersect: false,
-                        mode: 'index'
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
+                        mode: 'index',
                     },
                     scales: {
                         y: {
@@ -209,8 +185,8 @@
                             position: 'left',
                             title: {
                                 display: true,
-                                text: 'Price'
-                            }
+                                text: 'Price',
+                            },
                         },
                         y1: {
                             type: 'linear',
@@ -218,150 +194,134 @@
                             position: 'right',
                             title: {
                                 display: true,
-                                text: 'Signal'
+                                text: 'Signal',
                             },
                             grid: {
-                                drawOnChartArea: false
+                                drawOnChartArea: false,
                             },
                             min: -2,
-                            max: 2
-                        }
-                    }
-                }
+                            max: 2,
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                    },
+                },
             });
 
-            new Chart(document.getElementById('macdChart').getContext('2d'), {
+            // (B) 하단 차트: MACD + RSI
+            const indicatorCtx = document.getElementById('indicatorChart').getContext('2d');
+            new Chart(indicatorCtx, {
                 type: 'line',
                 data: {
                     labels: timestamps,
-                    datasets: [{
-                        label: 'MACD',
-                        data: analysisData.macd,
-                        type: 'bar', // 바 차트로 변경
-                        backgroundColor: analysisData.macd.map(value =>
-                            value >= 0 ? 'rgba(75, 192, 192, 0.5)' : 'rgba(255, 99, 132, 0.5)'
-                        ),
-                        borderColor: analysisData.macd.map(value =>
-                            value >= 0 ? 'rgb(75, 192, 192)' : 'rgb(255, 99, 132)'
-                        ),
-                        borderWidth: 1
-                    }]
+                    datasets: [
+                        // MACD를 막대(bar) 형태
+                        {
+                            label: 'MACD',
+                            data: analysisData.macd,
+                            type: 'bar',
+                            backgroundColor: analysisData.macd.map(value =>
+                                value >= 0
+                                    ? 'rgba(75, 192, 192, 0.5)'
+                                    : 'rgba(255, 99, 132, 0.5)'
+                            ),
+                            borderWidth: 1,
+                            yAxisID: 'yMACD',
+                        },
+                        // RSI를 선(line) 형태
+                        {
+                            label: 'RSI',
+                            data: analysisData.rsi,
+                            borderColor: 'rgb(153, 102, 255)',
+                            fill: false,
+                            type: 'line',
+                            yAxisID: 'yRSI',
+                        },
+                        // 보조선 - Overbought (70)
+                        {
+                            label: 'Overbought (70)',
+                            data: Array(timestamps.length).fill(70),
+                            borderColor: 'rgba(255, 99, 132, 0.5)',
+                            borderDash: [5, 5],
+                            fill: false,
+                            type: 'line',
+                            yAxisID: 'yRSI',
+                        },
+                        // 보조선 - Oversold (30)
+                        {
+                            label: 'Oversold (30)',
+                            data: Array(timestamps.length).fill(30),
+                            borderColor: 'rgba(255, 99, 132, 0.5)',
+                            borderDash: [5, 5],
+                            fill: false,
+                            type: 'line',
+                            yAxisID: 'yRSI',
+                        },
+                    ],
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: {
                         intersect: false,
-                        mode: 'index'
+                        mode: 'index',
+                    },
+                    scales: {
+                        // MACD 축 (좌측)
+                        yMACD: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'MACD',
+                            },
+                        },
+                        // RSI 축 (우측)
+                        yRSI: {
+                            type: 'linear',
+                            position: 'right',
+                            min: 0,
+                            max: 100,
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            title: {
+                                display: true,
+                                text: 'RSI',
+                            },
+                        },
                     },
                     plugins: {
                         legend: {
                             display: true,
-                            position: 'top'
+                            position: 'top',
                         },
                         tooltip: {
                             callbacks: {
                                 label: function (context) {
-                                    return `MACD: ${context.raw.toFixed(2)}`;
-                                }
-                            }
-                        }
+                                    const datasetLabel = context.dataset.label || '';
+                                    const rawValue = context.parsed.y;
+                                    return `${datasetLabel}: ${rawValue.toFixed ? rawValue.toFixed(2) : rawValue}`;
+                                },
+                            },
+                        },
                     },
-                    scales: {
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'MACD Value'
-                            }
-                        }
-                    }
-                }
-            });
-
-            // RSI Chart
-            new Chart(document.getElementById('rsiChart').getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: timestamps,
-                    datasets: [{
-                        label: 'RSI',
-                        data: analysisData.rsi,
-                        borderColor: 'rgb(153, 102, 255)',
-                        fill: false
-                    }, {
-                        label: 'Overbought (70)',
-                        data: Array(timestamps.length).fill(70),
-                        borderColor: 'rgba(255, 99, 132, 0.5)',
-                        borderDash: [5, 5],
-                        fill: false
-                    }, {
-                        label: 'Oversold (30)',
-                        data: Array(timestamps.length).fill(30),
-                        borderColor: 'rgba(255, 99, 132, 0.5)',
-                        borderDash: [5, 5],
-                        fill: false
-                    }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            min: 0,
-                            max: 100
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    }
-                }
-            });
-
-            // Trading Signals Chart
-            new Chart(document.getElementById('signalChart').getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: timestamps,
-                    datasets: [{
-                        label: 'Trading Signals',
-                        data: analysisData.signals,
-                        backgroundColor: analysisData.signals.map(signal =>
-                            signal > 0 ? 'rgba(75, 192, 192, 0.5)' :
-                                signal < 0 ? 'rgba(255, 99, 132, 0.5)' :
-                                    'rgba(201, 203, 207, 0.5)'
-                        )
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    }
-                }
             });
 
         } catch (error) {
             console.error('Error initializing charts:', error);
-
             const container = document.getElementById('chartContainer');
             const errorDiv = document.createElement('div');
             errorDiv.className = 'status-box warning';
             errorDiv.innerHTML = `
-            <h3>Error</h3>
-            <p class="status-message">Failed to load chart data: ${error.message}</p>
-        `;
+                <h3>Error</h3>
+                <p class="status-message">Failed to load chart data: ${error.message}</p>
+            `;
             container.prepend(errorDiv);
         }
     });

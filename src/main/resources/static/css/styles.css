@@ -299,3 +299,31 @@ body {
     font-weight: bold;
     color: #4CAF50;
 }
+
+.chart-section {
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* 차트 사이 간격 */
+    margin: 20px 0;
+}
+.chart-wrapper {
+    position: relative;
+    height: 400px;  /* 차트 높이 */
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+}
+canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.metrics-container {
+    margin-bottom: 20px;
+}
+/* 차트 제목을 조금 볼드하게 */
+.chart-title {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
