@@ -11,16 +11,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import scoula.coin.application.dto.RunnerDistanceDTO;
 import scoula.coin.application.dto.RunningRecord;
-import scoula.coin.application.entity.RunningRecords;
 import scoula.coin.domain.run.Repository.RegularRepository;
 import scoula.coin.domain.run.Repository.RunningRecordsRepository;
 import scoula.coin.domain.run.Service.ImageTextService;
 import scoula.coin.domain.run.Service.RunService;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -60,7 +59,7 @@ public class RunningController {
         return ResponseEntity.ok(record);
     }
 
-    @Operation(summary = "러닝 기록 저장",description = "사진에서 추출, 수정된 기록 저장")
+    @Operation(summary = "러닝 기록 저장", description = "사진에서 추출, 수정된 기록 저장")
     @PostMapping("/running/save")
     @ResponseBody
     public ResponseEntity<RunningRecord> saveRecord(@RequestBody RunningRecord record) {
@@ -100,7 +99,7 @@ public class RunningController {
         log.info("이미지 수정 요청 받음 - DateTime: {}, Location: {}, Font: {}", dateTime, location, fontName);
 
         try {
-            Resource resource = new ClassPathResource("/static/images/bg.png");
+            Resource resource = new ClassPathResource("static/images/bg.png");
             log.info("리소스 경로: {}", resource.getURI());
 
             if (!resource.exists()) {
@@ -109,23 +108,22 @@ public class RunningController {
             }
 
             log.info("이미지 파일 읽기 시작");
-            byte[] imageBytes = Files.readAllBytes(resource.getFile().toPath());
-            log.info("이미지 파일 읽기 완료: {} bytes", imageBytes.length);
+            try (InputStream inputStream = resource.getInputStream()) {
+                byte[] imageBytes = inputStream.readAllBytes();
 
-            log.info("이미지 텍스트 추가 시작");
-            byte[] modifiedImage = imageTextService.addTextToImage(
-                    imageBytes,
-                    dateTime,
-                    location,
-                    fontName,
-                    fontSize,
-                    fontColor
-            );
-            log.info("이미지 텍스트 추가 완료: {} bytes", modifiedImage.length);
+                byte[] modifiedImage = imageTextService.addTextToImage(
+                        imageBytes,
+                        dateTime,
+                        location,
+                        fontName,
+                        fontSize,
+                        fontColor
+                );
 
-            return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_PNG)
-                    .body(modifiedImage);
+                return ResponseEntity.ok()
+                        .contentType(MediaType.IMAGE_PNG)
+                        .body(modifiedImage);
+            }
 
         } catch (IOException e) {
             log.error("이미지 처리 중 IO 예외 발생", e);
