@@ -91,16 +91,28 @@ public class RunningController {
     @PostMapping("/running/modify")
     @ResponseBody
     public ResponseEntity<byte[]> modifyImage(
-            //@RequestParam("image") MultipartFile file,
             @RequestParam("dateTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm") LocalDateTime dateTime,
             @RequestParam("location") String location,
             @RequestParam(value = "fontName", defaultValue = "Arial") String fontName,
             @RequestParam(value = "fontSize", defaultValue = "50") int fontSize,
             @RequestParam(value = "fontColor", defaultValue = "#FFFFFF") String fontColor) {
 
+        log.info("이미지 수정 요청 받음 - DateTime: {}, Location: {}, Font: {}", dateTime, location, fontName);
+
         try {
-            Resource resource = new ClassPathResource("static/" + "images/bg.png");
+            Resource resource = new ClassPathResource("/static/images/bg.png");
+            log.info("리소스 경로: {}", resource.getURI());
+
+            if (!resource.exists()) {
+                log.error("이미지 파일을 찾을 수 없음: {}", resource.getFilename());
+                return ResponseEntity.notFound().build();
+            }
+
+            log.info("이미지 파일 읽기 시작");
             byte[] imageBytes = Files.readAllBytes(resource.getFile().toPath());
+            log.info("이미지 파일 읽기 완료: {} bytes", imageBytes.length);
+
+            log.info("이미지 텍스트 추가 시작");
             byte[] modifiedImage = imageTextService.addTextToImage(
                     imageBytes,
                     dateTime,
@@ -109,12 +121,17 @@ public class RunningController {
                     fontSize,
                     fontColor
             );
+            log.info("이미지 텍스트 추가 완료: {} bytes", modifiedImage.length);
 
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_PNG)
                     .body(modifiedImage);
 
         } catch (IOException e) {
+            log.error("이미지 처리 중 IO 예외 발생", e);
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            log.error("이미지 처리 중 예상치 못한 예외 발생", e);
             return ResponseEntity.internalServerError().build();
         }
     }
