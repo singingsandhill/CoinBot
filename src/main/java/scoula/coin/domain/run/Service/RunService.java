@@ -267,7 +267,9 @@ public class RunService {
      * @return
      */
     public List<RunnerDistanceDTO> getRunnerDistances() {
-        return runningRecordsRepository.findTotalDistanceByRunner();
+        // Only include records after June 19, 2025
+        LocalDateTime cutoffDate = LocalDateTime.of(2025, 6, 19, 0, 0);
+        return runningRecordsRepository.findTotalDistanceByRunnerAfterDate(cutoffDate);
     }
 
     /**

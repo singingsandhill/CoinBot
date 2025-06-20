@@ -1,183 +1,807 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <link rel="icon" type="image/png" href="/images/97_logo_inverted.png">
-  <title>97Runners</title>
-  <link href="/css/styles.css" rel="stylesheet">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Song+Myung&display=swap');
-    * {
-      font-family: 'Song Myung', serif;
-    }
-    .title {
-      text-align: center;
-      color: white;
-      background-color: tomato;
-      font-size: 24px;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/images/97_logo_inverted.png">
+    <title>97Runners - 정규런</title>
+    <link href="/css/styles.css" rel="stylesheet">
+    <style>
+        /* Modern Design System matching home.html */
+        :root {
+            --primary-color: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4338ca;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --border-radius: 0.75rem;
+            --border-radius-sm: 0.375rem;
+            --border-radius-lg: 1rem;
+        }
 
-    .bucket-list-container {
-      display: flex;
-      flex-wrap: nowrap; /* 요소가 줄바꿈되지 않도록 설정 */
-      gap: 20px;
-      justify-content: flex-start; /* 시작 방향 정렬 */
-      overflow-x: auto; /* 가로 스크롤 활성화 */
-      padding: 10px; /* 스크롤 영역 안쪽 여백 */
-      white-space: nowrap; /* 줄바꿈 방지 */
-    }
-    .bucket {
-      display: inline-block;
-      max-width: 300px;
-      height: 200px;
-      background-size: cover;
-      background-position: center;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    .bucket-title {
-      text-align: center;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-    /* Attempted Runners Table */
-    .attempt {
-      margin-top: 20px;
-      padding: 10px;
-      background-color: #fff;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      overflow-x: auto; /* 테이블 스크롤 */
-    }
-    table {
-      width: 100%;
-      min-width: 400px;
-      border-collapse: collapse;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
-    }
-    th {
-      background-color: tomato;
-      color: white;
-    }
-    tr:nth-child(even) td {
-      background-color: #f9f9f9;
-    }
-  </style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+            min-height: 100vh;
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        /* Modern Navigation */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0 1rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-link:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Header Section */
+        .header-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--gray-600);
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Gallery Section */
+        .gallery-section {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title::before {
+            content: '📸';
+            font-size: 1.25rem;
+        }
+
+        /* Gallery Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .gallery-item {
+            position: relative;
+            background: var(--gray-100);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+            cursor: pointer;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .gallery-image {
+            width: 100%;
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+
+        .gallery-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            transition: opacity 0.3s ease;
+        }
+
+        .gallery-item:hover .gallery-image::before {
+            opacity: 0;
+        }
+
+        .gallery-caption {
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .gallery-date {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 0.875rem;
+        }
+
+        .gallery-description {
+            color: var(--gray-600);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+        }
+
+        .stats-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .most-attempted-title::before {
+            content: '🏆';
+            font-size: 1.125rem;
+        }
+
+        .attempts-title::before {
+            content: '📊';
+            font-size: 1.125rem;
+        }
+
+        /* Most Attempted Card */
+        .champion-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--secondary-color), #fbbf24);
+            border-radius: var(--border-radius);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .champion-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .champion-info h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .champion-info p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .champion-badge {
+            margin-left: auto;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        /* Attempts Table */
+        .attempts-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .attempts-table th {
+            background: var(--gray-50);
+            color: var(--gray-700);
+            font-weight: 600;
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 2px solid var(--gray-200);
+            font-size: 0.875rem;
+        }
+
+        .attempts-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            transition: background-color 0.2s ease;
+        }
+
+        .attempts-table tr:hover td {
+            background-color: var(--gray-50);
+        }
+
+        .runner-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .runner-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-color);
+        }
+
+        .runner-name {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .attempts-count {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.125rem;
+        }
+
+        /* Loading and Error States */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 3rem;
+            color: var(--gray-500);
+        }
+
+        .loading-spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid var(--gray-200);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-state {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            text-align: center;
+            border: 1px solid #fecaca;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray-500);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Modal for gallery images */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            cursor: pointer;
+        }
+
+        .modal-content {
+            display: block;
+            margin: 5% auto;
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: var(--border-radius);
+        }
+
+        .modal-caption {
+            text-align: center;
+            color: white;
+            padding: 1rem;
+            font-size: 1.125rem;
+        }
+
+        .close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .main-title {
+                font-size: 2rem;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .nav-link {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .stats-section {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .gallery-section,
+            .stats-card {
+                padding: 1.5rem;
+            }
+
+            .champion-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .champion-badge {
+                margin-left: 0;
+                margin-top: 1rem;
+            }
+        }
+    </style>
 </head>
-<body class="bg">
-<nav class="navbar">
-  <div class="nav-container">
-    <a href="/running/home" class="nav-link">러닝 마일리지</a>
-    <a href="/running/record" class="nav-link">러닝 기록 추가하기</a>
-    <a href="/running/regular" class="nav-link">정규런 보러가기</a>
-  </div>
-</nav>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/running/home" class="nav-link">🏠 러닝 마일리지</a>
+            <a href="/running/record" class="nav-link">➕ 러닝 기록 추가하기</a>
+            <a href="/running/regular" class="nav-link">📅 정규런 보러가기</a>
+        </div>
+    </nav>
 
-<div class="container">
-  <h1 class="title">정규런</h1>
+    <div class="container">
+        <div class="header-section">
+            <h1 class="main-title">정규런</h1>
+            <p class="subtitle">함께하는 정기 러닝 모임의 추억</p>
+        </div>
 
-  <!-- 버킷 리스트 -->
-  <div id="bucket-list" class="bucket-list-container"></div>
+        <!-- Gallery Section -->
+        <div class="gallery-section">
+            <h2 class="section-title">정규런 갤러리</h2>
+            <div id="gallery-grid" class="gallery-grid">
+                <!-- Gallery items will be populated by JavaScript -->
+            </div>
+        </div>
 
-  <!-- Most Attempted Runner -->
-  <div id="most-attempt-container" class="attempt">
-    <h2>Most Attempted Runner</h2>
-    <p id="most-attempt-content">Loading...</p>
-  </div>
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <!-- Most Attempted Runner -->
+            <div class="stats-card">
+                <h3 class="stats-title most-attempted-title">최다 참석자</h3>
+                <div id="most-attempt-container">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>데이터를 불러오는 중...</p>
+                    </div>
+                </div>
+            </div>
 
-  <!-- Attempted Runners Table -->
-  <div id="attempt-container" class="attempt">
-    <h2>Attempted Runners</h2>
-    <table>
-      <thead>
-      <tr>
-        <th>Runner</th>
-        <th>Attempts</th>
-      </tr>
-      </thead>
-      <tbody id="attempt-content">
-      <tr>
-        <td colspan="2">Loading...</td>
-      </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+            <!-- All Attempts -->
+            <div class="stats-card">
+                <h3 class="stats-title attempts-title">참석 현황</h3>
+                <div id="attempts-container">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>데이터를 불러오는 중...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
-  // 버킷 리스트 데이터 렌더링
-  const buckets = [
-    { title: "2024년 12월 11일", image: "/images/regular/241211.jpg" },
-    { title: "2024년 12월 22일", image: "/images/regular/241222.jpg" },
-    { title: "2025년 1월 8일", image: "/images/regular/250108.jpg" },
-    { title: "2025년 1월 22일", image: "/images/regular/250122.jpg" }
-  ];
+    <!-- Modal for image viewing -->
+    <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modalImage">
+        <div class="modal-caption" id="modalCaption"></div>
+    </div>
 
-  const bucketListContainer = document.getElementById("bucket-list");
-  buckets.forEach(bucket => {
-    const container = document.createElement("div");
-    const div = document.createElement("div");
-    const title = document.createElement("p");
+    <script>
+        // Gallery data
+        const galleryItems = [
+            { 
+                title: "2024년 12월 11일", 
+                image: "/images/regular/241211.jpg",
+                description: "겨울 정규런 첫 번째 모임"
+            },
+            { 
+                title: "2024년 12월 22일", 
+                image: "/images/regular/241222.jpg",
+                description: "연말 특별 정규런"
+            },
+            { 
+                title: "2025년 1월 8일", 
+                image: "/images/regular/250108.jpg",
+                description: "신년 첫 정규런"
+            },
+            { 
+                title: "2025년 1월 22일", 
+                image: "/images/regular/250122.jpg",
+                description: "새해 두 번째 모임"
+            }
+        ];
 
-    div.className = "bucket";
-    div.style.backgroundImage = `url(${bucket.image})`;
+        // Data management class
+        class RegularRunDataManager {
+            constructor() {
+                this.cache = new Map();
+                this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+            }
 
-    title.className = "bucket-title";
-    title.textContent = bucket.title;
+            async fetchWithCache(url, cacheKey) {
+                const cached = this.cache.get(cacheKey);
+                if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+                    return cached.data;
+                }
 
-    container.appendChild(div);
-    container.appendChild(title);
-    bucketListContainer.appendChild(container);
-  });
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: 데이터를 불러오는데 실패했습니다`);
+                    }
+                    
+                    const data = await response.json();
+                    this.cache.set(cacheKey, {
+                        data: data,
+                        timestamp: Date.now()
+                    });
+                    
+                    return data;
+                } catch (error) {
+                    console.error(`Failed to fetch ${cacheKey}:`, error);
+                    throw error;
+                }
+            }
 
-  // Most Attempt 데이터 가져오기
-  async function fetchMostAttempt() {
-    try {
-      const response = await fetch('/running/mostattempt');
-      if (!response.ok) {
-        throw new Error('Failed to fetch most attempt');
-      }
-      const data = await response.json();
+            clearCache() {
+                this.cache.clear();
+            }
+        }
 
-      // 결과를 most-attempt-container에 표시
-      const container = document.getElementById('most-attempt-container');
-      container.innerHTML = `
-          <h2>Most Attempted Runner</h2>
-          <p>${JSON.stringify(data)}</p>
-        `;
-    } catch (error) {
-      document.getElementById('most-attempt-container').textContent = `Error: ${error.message}`;
-    }
-  }
+        // Initialize data manager
+        const dataManager = new RegularRunDataManager();
 
-  // Attempted Runners 데이터 가져오기
-  async function fetchAttempt() {
-    try {
-      const response = await fetch('/running/attempt');
-      if (!response.ok) throw new Error('Failed to fetch attempts');
-      const data = await response.json();
-      const tbody = document.getElementById('attempt-content');
-      tbody.innerHTML = '';
+        // Utility functions
+        const utils = {
+            handleImageError: (event) => {
+                event.target.onerror = null;
+                event.target.src = '/images/runners/default.png';
+            },
 
-      data.forEach(item => {
-        const row = `<tr><td>${item[0]}</td><td>${item[1]}</td></tr>`;
-        tbody.insertAdjacentHTML('beforeend', row);
-      });
-    } catch (error) {
-      document.getElementById('attempt-content').innerHTML =
-              `<tr><td colspan="2">Error: ${error.message}</td></tr>`;
-    }
-  }
+            createErrorState: (message) => {
+                return `
+                    <div class="error-state">
+                        <div style="font-weight: 600; margin-bottom: 0.5rem;">⚠️ 오류가 발생했습니다</div>
+                        <div>${message}</div>
+                    </div>
+                `;
+            },
 
-  fetchMostAttempt();
-  fetchAttempt();
-</script>
+            createEmptyState: (message, icon = '📭') => {
+                return `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">${icon}</div>
+                        <p>${message}</p>
+                    </div>
+                `;
+            }
+        };
+
+        // Gallery rendering
+        function renderGallery() {
+            const galleryGrid = document.getElementById('gallery-grid');
+            
+            galleryGrid.innerHTML = galleryItems.map((item, index) => `
+                <div class="gallery-item fade-in" style="animation-delay: ${index * 100}ms;" onclick="openModal('${item.image}', '${item.title}', '${item.description}')">
+                    <div class="gallery-image" style="background-image: url('${item.image}')"></div>
+                    <div class="gallery-caption">
+                        <div class="gallery-date">${item.title}</div>
+                        <div class="gallery-description">${item.description}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Modal functionality
+        function openModal(imageSrc, title, description) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const caption = document.getElementById('modalCaption');
+            
+            modal.style.display = 'block';
+            modalImg.src = imageSrc;
+            caption.innerHTML = `<strong>${title}</strong><br>${description}`;
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Most attempted runner
+        async function fetchAndRenderMostAttempted() {
+            const container = document.getElementById('most-attempt-container');
+            
+            try {
+                const data = await dataManager.fetchWithCache('/running/mostattempt', 'mostAttempted');
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = utils.createEmptyState('아직 데이터가 없습니다', '🏃‍♂️');
+                    return;
+                }
+
+                const [runnerName, attemptCount] = data[0];
+                
+                container.innerHTML = `
+                    <div class="champion-card fade-in">
+                        <img src="/images/runners/${runnerName}.png" 
+                             alt="${runnerName}" 
+                             class="champion-avatar"
+                             onerror="this.src='/images/runners/default.png'">
+                        <div class="champion-info">
+                            <h3>${runnerName}</h3>
+                            <p>정규런 챔피언</p>
+                        </div>
+                        <div class="champion-badge">
+                            ${attemptCount}회 참석
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                container.innerHTML = utils.createErrorState(error.message);
+            }
+        }
+
+        // All attempts
+        async function fetchAndRenderAttempts() {
+            const container = document.getElementById('attempts-container');
+            
+            try {
+                const data = await dataManager.fetchWithCache('/running/attempt', 'attempts');
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = utils.createEmptyState('참석 기록이 없습니다', '📊');
+                    return;
+                }
+
+                const tableRows = data.map((item, index) => {
+                    const [runnerName, attemptCount] = item;
+                    return `
+                        <tr style="animation: fadeInUp 0.6s ease-out ${index * 50}ms both;">
+                            <td>
+                                <div class="runner-cell">
+                                    <img src="/images/runners/${runnerName}.png" 
+                                         alt="${runnerName}" 
+                                         class="runner-avatar"
+                                         onerror="this.src='/images/runners/default.png'">
+                                    <span class="runner-name">${runnerName}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="attempts-count">${attemptCount}회</span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                container.innerHTML = `
+                    <table class="attempts-table">
+                        <thead>
+                            <tr>
+                                <th>러너</th>
+                                <th>참석 횟수</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                container.innerHTML = utils.createErrorState(error.message);
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Render gallery immediately
+            renderGallery();
+            
+            // Fetch data
+            fetchAndRenderMostAttempted();
+            fetchAndRenderAttempts();
+            
+            // Modal event listeners
+            const modal = document.getElementById('imageModal');
+            const closeBtn = document.querySelector('.close');
+            
+            closeBtn.onclick = closeModal;
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+            
+            // Keyboard support for modal
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && modal.style.display === 'block') {
+                    closeModal();
+                }
+            });
+            
+            // Set up periodic refresh (every 5 minutes)
+            setInterval(() => {
+                dataManager.clearCache();
+                fetchAndRenderMostAttempted();
+                fetchAndRenderAttempts();
+            }, 5 * 60 * 1000);
+        });
+
+        // Handle page visibility change
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                // Page became visible, refresh data if cache is old
+                const cacheAge = 2 * 60 * 1000; // 2 minutes
+                setTimeout(() => {
+                    dataManager.clearCache();
+                    fetchAndRenderMostAttempted();
+                    fetchAndRenderAttempts();
+                }, cacheAge);
+            }
+        });
+    </script>
 </body>
 </html>

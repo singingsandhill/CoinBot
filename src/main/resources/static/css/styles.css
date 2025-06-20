@@ -103,12 +103,17 @@
     border-radius: 4px;
     margin-left: 8px;
 }
+/* Enhanced styles for running application - compatible with existing styles */
+
+/* Container overrides for running pages */
 .container {
     width: 100%;
     margin: 0 auto;
     padding: 20px;
+    max-width: 1200px; /* Add max-width for better readability */
 }
 
+/* Enhanced navbar for running pages */
 .navbar {
     background-color: #333;
     padding: 1rem;
@@ -116,6 +121,7 @@
     top: 0;
     width: 100%;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 1000; /* Ensure navbar stays on top */
 }
 
 .nav-container {
@@ -124,6 +130,7 @@
     display: flex;
     justify-content: space-evenly;
     gap: 20px;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
 }
 
 .nav-link {
@@ -131,11 +138,116 @@
     text-decoration: none;
     padding: 0.5rem 1rem;
     border-radius: 4px;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 .nav-link:hover {
     background-color: #555;
+    transform: translateY(-1px);
+}
+
+/* Enhanced progress bars */
+.progress-bar {
+    width: 100%;
+    height: 20px; /* Slightly larger for better visibility */
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 10px;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,0.3),
+        transparent
+    );
+    animation: shine 2s infinite;
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Runner card styles */
+.runner-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
+    margin: 1rem 0;
+}
+
+/* Enhanced loading spinner */
+.loading-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid #e2e8f0;
+    border-top: 3px solid #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive enhancements */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .nav-container {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .nav-link {
+        text-align: center;
+        padding: 0.75rem 1rem;
+    }
+    
+    .runner-card {
+        padding: 1.5rem;
+        border-radius: 12px;
+    }
+    
+    .progress-bar {
+        height: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0.5rem;
+    }
+    
+    .runner-card {
+        padding: 1rem;
+        margin: 0.5rem 0;
+    }
 }
 
 table {

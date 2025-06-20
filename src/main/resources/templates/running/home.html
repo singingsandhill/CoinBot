@@ -2,79 +2,401 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="/images/97_logo_inverted.png">
-    <title>97Runners</title>
+    <title>97Runners - 마일리지 현황</title>
     <link href="/css/styles.css" rel="stylesheet">
-</head>
-<body class="bg">
-<nav class="navbar">
-    <div class="nav-container">
-        <a href="/running/home" class="nav-link">러닝 마일리지</a>
-        <a href="/running/record" class="nav-link">러닝 기록 추가하기</a>
-        <a href="/running/regular" class="nav-link">정규런 보러가기</a>
-    </div>
-</nav>
-
-<div class="container">
-    <div id="runner-progress-root"></div>
-    <button id="kakao-link-btn">
-        <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png"
-             alt="카카오톡 공유하기"
-             style="width: 24px; height: 24px;">
-        카카오톡 공유하기
-    </button>
-</div>
-
-<script src="https://unpkg.com/react@17/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-<script src="/js/runner-progress.js"></script>
-<script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
-<script>
-    // 카카오톡 초기화
-    Kakao.init('255ab246007b5ba626c01b60850398a9');
-
-    // 초기화 여부 확인
-    if (!Kakao.isInitialized()) {
-        console.error('Kakao SDK 초기화 실패');
-    }
-
-    // 카카오톡 공유하기 버튼 생성
-    Kakao.Link.createDefaultButton({
-        container: '#kakao-link-btn',
-        objectType: 'feed',
-        content: {
-            title: '97Runners 마일리지 현황',
-            description: '97Runners의 러닝 마일리지 현황을 확인해보세요!',
-            imageUrl: 'https://drive.google.com/file/d/18p-1SVrk86_1wN8MJN29YXoGx58-VMoO/view?usp=sharing', // 로고 이미지 경로로 수정 필요
-            link: {
-                mobileWebUrl: window.location.href,
-                webUrl: window.location.href,
-            },
-        },
-        social: {
-            viewCount: 0,
-            likeCount: 0,
-            commentCount: 0,
-            sharedCount: 0,
-        },
-        buttons: [
-            {
-                title: '웹으로 보기',
-                link: {
-                    mobileWebUrl: window.location.href,
-                    webUrl: window.location.href,
-                },
-            }
-        ],
-    });
-
-    // 에러 처리
-    window.onerror = function(message, source, lineno, colno, error) {
-        if (message.includes('Kakao')) {
-            console.error('카카오톡 공유 기능 에러:', error);
-            alert('카카오톡 공유 기능을 사용할 수 없습니다. 잠시 후 다시 시도해주세요.');
+    <style>
+        /* Modern Design System */
+        :root {
+            --primary-color: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4338ca;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --border-radius: 0.75rem;
+            --border-radius-sm: 0.375rem;
+            --border-radius-lg: 1rem;
         }
-    };
-</script>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+            min-height: 100vh;
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        /* Modern Navigation */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0 1rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-link:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Header Section */
+        .header-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--gray-600);
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+        }
+
+        .date-filter-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--gray-100);
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        /* Runner Progress Section */
+        .runner-section {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title::before {
+            content: '🏃‍♂️';
+            font-size: 1.25rem;
+        }
+
+        /* Share Button */
+        .share-section {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        #kakao-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #fee500;
+            color: #3c1e1e;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        #kakao-link-btn:hover {
+            background: #fdd800;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Loading and Error States */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 3rem;
+            color: var(--gray-500);
+        }
+
+        .loading-spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid var(--gray-200);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-state {
+            background: var(--error-color);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .main-title {
+                font-size: 2rem;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .nav-link {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+
+            .runner-section {
+                padding: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/running/home" class="nav-link">🏠 러닝 마일리지</a>
+            <a href="/running/record" class="nav-link">➕ 러닝 기록 추가하기</a>
+            <a href="/running/regular" class="nav-link">📅 정규런 보러가기</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header-section">
+            <h1 class="main-title">97Runners 마일리지</h1>
+            <p class="subtitle">함께 달리며 성장하는 우리의 여정</p>
+            <div class="date-filter-info">
+                📅 2025년 6월 19일 이후 기록만 표시
+            </div>
+        </div>
+
+        <div class="stats-grid" id="stats-container">
+            <!-- Stats will be populated by JavaScript -->
+        </div>
+
+        <div class="runner-section">
+            <h2 class="section-title">러너 현황</h2>
+            <div id="runner-progress-root"></div>
+        </div>
+
+        <div class="share-section">
+            <button id="kakao-link-btn">
+                <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_small.png"
+                     alt="카카오톡 공유하기"
+                     style="width: 20px; height: 20px;">
+                카카오톡으로 공유하기
+            </button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="/js/runner-progress.js"></script>
+    <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+    <script>
+        // 카카오톡 초기화 및 에러 처리
+        try {
+            Kakao.init('255ab246007b5ba626c01b60850398a9');
+            
+            if (Kakao.isInitialized()) {
+                // 카카오톡 공유하기 버튼 생성
+                Kakao.Link.createDefaultButton({
+                    container: '#kakao-link-btn',
+                    objectType: 'feed',
+                    content: {
+                        title: '97Runners 마일리지 현황',
+                        description: '97Runners의 러닝 마일리지 현황을 확인해보세요! 함께 달리며 성장하는 우리의 여정 🏃‍♂️',
+                        imageUrl: window.location.origin + '/images/97_logo.png',
+                        link: {
+                            mobileWebUrl: window.location.href,
+                            webUrl: window.location.href,
+                        },
+                    },
+                    social: {
+                        viewCount: 0,
+                        likeCount: 0,
+                        commentCount: 0,
+                        sharedCount: 0,
+                    },
+                    buttons: [
+                        {
+                            title: '웹으로 보기',
+                            link: {
+                                mobileWebUrl: window.location.href,
+                                webUrl: window.location.href,
+                            },
+                        }
+                    ],
+                });
+            } else {
+                console.error('카카오 SDK 초기화 실패');
+                document.getElementById('kakao-link-btn').style.display = 'none';
+            }
+        } catch (error) {
+            console.error('카카오톡 공유 기능 초기화 오류:', error);
+            document.getElementById('kakao-link-btn').style.display = 'none';
+        }
+
+        // 통계 데이터 업데이트 함수
+        function updateStats(runnerData) {
+            const statsContainer = document.getElementById('stats-container');
+            const totalRunners = runnerData.length;
+            const totalDistance = runnerData.reduce((sum, runner) => sum + runner.totalDistance, 0);
+            const avgDistance = totalRunners > 0 ? totalDistance / totalRunners : 0;
+            const topRunner = runnerData.length > 0 ? runnerData[0] : null;
+
+            const stats = [
+                { label: '총 러너 수', value: `${totalRunners}명`, icon: '👥' },
+                { label: '총 달린 거리', value: `${totalDistance.toFixed(1)}km`, icon: '🏃‍♂️' },
+                { label: '평균 거리', value: `${avgDistance.toFixed(1)}km`, icon: '📊' },
+                { label: '최고 기록', value: topRunner ? `${topRunner.totalDistance.toFixed(1)}km` : '0km', icon: '🏆' }
+            ];
+
+            statsContainer.innerHTML = stats.map(stat => `
+                <div class="stat-card">
+                    <div class="stat-label">${stat.icon} ${stat.label}</div>
+                    <div class="stat-value">${stat.value}</div>
+                </div>
+            `).join('');
+        }
+
+        // 데이터 로드 시 통계 업데이트
+        window.addEventListener('runnerDataLoaded', function(event) {
+            updateStats(event.detail);
+        });
+    </script>
 </body>
 </html>
