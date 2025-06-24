@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import scoula.coin.application.dto.RunnerDistanceDTO;
+import scoula.coin.application.dto.WeeklyRunnerDistanceDTO;
+import scoula.coin.application.dto.WeeklyRunnerFrequencyDTO;
 import scoula.coin.application.entity.RunningRecords;
 
 import java.time.LocalDateTime;
@@ -25,5 +27,21 @@ public interface RunningRecordsRepository extends JpaRepository<RunningRecords, 
 
     @Query("SELECT r.name, sum(r.distance) from RunningRecords r group by r.name ORDER BY sum(r.distance)")
     List<RunningRecords> findNameAndDistanceGroupByNameOrderByDistance(Long id);
+
+    @Query("SELECT new scoula.coin.application.dto.WeeklyRunnerDistanceDTO(r.name, SUM(r.distance), " +
+            "WEEK(r.dateTime), YEAR(r.dateTime)) " +
+            "FROM RunningRecords r " +
+            "WHERE YEAR(r.dateTime) = :year AND WEEK(r.dateTime) = :week " +
+            "GROUP BY r.name, WEEK(r.dateTime), YEAR(r.dateTime) " +
+            "ORDER BY SUM(r.distance) DESC")
+    List<WeeklyRunnerDistanceDTO> findTopRunnersByDistanceForWeek(@Param("year") int year, @Param("week") int week);
+
+    @Query("SELECT new scoula.coin.application.dto.WeeklyRunnerFrequencyDTO(r.name, COUNT(r), " +
+            "WEEK(r.dateTime), YEAR(r.dateTime)) " +
+            "FROM RunningRecords r " +
+            "WHERE YEAR(r.dateTime) = :year AND WEEK(r.dateTime) = :week " +
+            "GROUP BY r.name, WEEK(r.dateTime), YEAR(r.dateTime) " +
+            "ORDER BY COUNT(r) DESC")
+    List<WeeklyRunnerFrequencyDTO> findTopRunnersByFrequencyForWeek(@Param("year") int year, @Param("week") int week);
 
 }

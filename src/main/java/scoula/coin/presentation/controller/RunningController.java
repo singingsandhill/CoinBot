@@ -13,6 +13,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import scoula.coin.application.dto.RunnerDistanceDTO;
 import scoula.coin.application.dto.RunningRecord;
+import scoula.coin.application.dto.WeeklyRunnerDistanceDTO;
+import scoula.coin.application.dto.WeeklyRunnerFrequencyDTO;
 import scoula.coin.domain.run.Repository.RegularRepository;
 import scoula.coin.domain.run.Repository.RunningRecordsRepository;
 import scoula.coin.domain.run.Service.ImageTextService;
@@ -150,5 +152,17 @@ public class RunningController {
     @ResponseBody
     public List<String> getAvailableFonts() {
         return imageTextService.getAvailableFonts();
+    }
+
+    @GetMapping("/running/weekly-top-distance")
+    @ResponseBody
+    public List<WeeklyRunnerDistanceDTO> getWeeklyTopRunnersByDistance() {
+        return runService.getTopRunnersByDistanceForCurrentWeek();
+    }
+
+    @GetMapping("/running/weekly-top-frequency")
+    @ResponseBody
+    public List<WeeklyRunnerFrequencyDTO> getWeeklyTopRunnersByFrequency() {
+        return runService.getTopRunnersByFrequencyForCurrentWeek();
     }
 }

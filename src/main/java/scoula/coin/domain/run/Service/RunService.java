@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import scoula.coin.application.dto.RunnerDistanceDTO;
 import scoula.coin.application.dto.RunningRecord;
+import scoula.coin.application.dto.WeeklyRunnerDistanceDTO;
+import scoula.coin.application.dto.WeeklyRunnerFrequencyDTO;
 import scoula.coin.application.entity.Regular;
 import scoula.coin.application.entity.RunningRecords;
 import scoula.coin.domain.run.Repository.RegularRepository;
@@ -13,6 +15,7 @@ import scoula.coin.global.error.CustomException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.WeekFields;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -286,6 +289,32 @@ public class RunService {
      */
     public List<Object> mostAttempt(){
         return regularRepository.findByNameCount();
+    }
+
+    /**
+     * 주간 거리별 상위 러너 조회
+     * @return
+     */
+    public List<WeeklyRunnerDistanceDTO> getTopRunnersByDistanceForCurrentWeek() {
+        LocalDateTime now = LocalDateTime.now();
+        WeekFields weekFields = WeekFields.of(Locale.getDefault());
+        int currentWeek = now.get(weekFields.weekOfYear());
+        int currentYear = now.getYear();
+        
+        return runningRecordsRepository.findTopRunnersByDistanceForWeek(currentYear, currentWeek);
+    }
+
+    /**
+     * 주간 빈도별 상위 러너 조회
+     * @return
+     */
+    public List<WeeklyRunnerFrequencyDTO> getTopRunnersByFrequencyForCurrentWeek() {
+        LocalDateTime now = LocalDateTime.now();
+        WeekFields weekFields = WeekFields.of(Locale.getDefault());
+        int currentWeek = now.get(weekFields.weekOfYear());
+        int currentYear = now.getYear();
+        
+        return runningRecordsRepository.findTopRunnersByFrequencyForWeek(currentYear, currentWeek);
     }
 
 }

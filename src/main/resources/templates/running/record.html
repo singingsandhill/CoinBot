@@ -17,12 +17,32 @@
 </nav>
 <div class="container">
     <h2>Running Record</h2>
+    
+    <!-- Weekly Top Runners Section -->
+    <div class="weekly-stats">
+        <div class="stats-section">
+            <h3>이번 주 거리 순위</h3>
+            <div id="weeklyDistanceRanking" class="ranking-list">
+                <div class="loading">데이터 로딩 중...</div>
+            </div>
+        </div>
+        
+        <div class="stats-section">
+            <h3>이번 주 횟수 순위</h3>
+            <div id="weeklyFrequencyRanking" class="ranking-list">
+                <div class="loading">데이터 로딩 중...</div>
+            </div>
+        </div>
+    </div>
 
     <div class="ocr-section">
-        <h3>이미지 텍스트 추출</h3>
-        <div class="upload-container">
-            <input type="file" id="imageFile" accept="image/*">
-            <button onclick="processImage()" class="button">텍스트 추출</button>
+        <h3>러닝 기록 입력</h3>
+        <div class="input-options">
+            <div class="upload-container">
+                <input type="file" id="imageFile" accept="image/*">
+                <button onclick="processImage()" class="button">이미지에서 텍스트 추출</button>
+                <button onclick="showManualInput()" class="button button-secondary">수동 입력</button>
+            </div>
         </div>
         <div id="statusMessage" class="status"></div>
         <div id="extractedText" class="result"></div>
@@ -31,11 +51,11 @@
             <h3>파싱된 러닝 기록</h3>
             <div class="data-item">
                 <span class="data-label">이름:</span>
-                <input type="text" id="runnerName" class="editable-field">
+                <input type="text" id="runnerName" class="editable-field" placeholder="러너 이름 (필수)" required>
             </div>
             <div class="data-item">
                 <span class="data-label">장소:</span>
-                <input type="text" id="location" class="editable-field">
+                <input type="text" id="location" class="editable-field" placeholder="달린 장소">
             </div>
             <div class="data-item">
                 <span class="data-label">날짜 및 시간:</span>
@@ -43,11 +63,11 @@
             </div>
             <div class="data-item">
                 <span class="data-label">거리:</span>
-                <input type="number" id="distance" class="editable-field" step="0.01"> km
+                <input type="number" id="distance" class="editable-field" step="0.01" placeholder="0.00" min="0" required> km
             </div>
             <div class="data-item">
                 <span class="data-label">페이스:</span>
-                <input type="text" id="pace" class="editable-field">
+                <input type="text" id="pace" class="editable-field" placeholder="예: 5:30 /km">
             </div>
             <div style="margin-top: 20px;">
                 <button onclick="submitRecord()" class="button">기록 저장</button>
@@ -60,6 +80,89 @@
 <script th:inline="javascript">
     let currentData = {};
 
+    // Load weekly statistics on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadWeeklyStats();
+    });
+
+    async function loadWeeklyStats() {
+        try {
+            // Load distance ranking
+            const distanceResponse = await fetch('/running/weekly-top-distance');
+            const distanceData = await distanceResponse.json();
+            displayDistanceRanking(distanceData);
+
+            // Load frequency ranking
+            const frequencyResponse = await fetch('/running/weekly-top-frequency');
+            const frequencyData = await frequencyResponse.json();
+            displayFrequencyRanking(frequencyData);
+        } catch (error) {
+            console.error('주간 통계 로딩 오류:', error);
+            document.getElementById('weeklyDistanceRanking').innerHTML = '<div class="error">데이터 로딩 실패</div>';
+            document.getElementById('weeklyFrequencyRanking').innerHTML = '<div class="error">데이터 로딩 실패</div>';
+        }
+    }
+
+    function displayDistanceRanking(data) {
+        const container = document.getElementById('weeklyDistanceRanking');
+        if (data.length === 0) {
+            container.innerHTML = '<div class="no-data">이번 주 데이터가 없습니다.</div>';
+            return;
+        }
+
+        const html = data.map((runner, index) => `
+            <div class="ranking-item ${index < 3 ? 'top-three' : ''}">
+                <span class="rank">${index + 1}</span>
+                <span class="name">${runner.name}</span>
+                <span class="distance">${runner.totalDistance.toFixed(2)}km</span>
+            </div>
+        `).join('');
+        
+        container.innerHTML = html;
+    }
+
+    function displayFrequencyRanking(data) {
+        const container = document.getElementById('weeklyFrequencyRanking');
+        if (data.length === 0) {
+            container.innerHTML = '<div class="no-data">이번 주 데이터가 없습니다.</div>';
+            return;
+        }
+
+        const html = data.map((runner, index) => `
+            <div class="ranking-item ${index < 3 ? 'top-three' : ''}">
+                <span class="rank">${index + 1}</span>
+                <span class="name">${runner.name}</span>
+                <span class="frequency">${runner.runCount}회</span>
+            </div>
+        `).join('');
+        
+        container.innerHTML = html;
+    }
+
+    function showManualInput() {
+        // Show the form directly without image processing
+        const parsedDataDiv = document.getElementById('parsedData');
+        const statusDiv = document.getElementById('statusMessage');
+        const resultDiv = document.getElementById('extractedText');
+        
+        // Clear any previous status messages
+        statusDiv.innerHTML = '';
+        resultDiv.innerHTML = '';
+        
+        // Initialize with default data (current time)
+        const now = new Date();
+        currentData = {
+            name: '',
+            location: '',
+            dateTime: now.toISOString(),
+            distance: 0,
+            pace: ''
+        };
+        
+        displayParsedData(currentData);
+        statusDiv.innerHTML = '<div class="info">수동 입력 모드: 아래 양식을 직접 작성해주세요.</div>';
+    }
+
     async function processImage() {
         const imageFile = document.getElementById('imageFile').files[0];
         const statusDiv = document.getElementById('statusMessage');
@@ -67,7 +170,8 @@
         const parsedDataDiv = document.getElementById('parsedData');
 
         if (!imageFile) {
-            alert('이미지를 선택해주세요.');
+            // Instead of showing alert, offer manual input option
+            showManualInput();
             return;
         }
 
@@ -142,14 +246,28 @@
 
     async function submitRecord() {
         try {
+            // Basic validation for required fields
+            const name = document.getElementById('runnerName').value.trim();
+            const distance = parseFloat(document.getElementById('distance').value);
+            
+            if (!name) {
+                alert('이름을 입력해주세요.');
+                return;
+            }
+            
+            if (!distance || distance <= 0) {
+                alert('유효한 거리를 입력해주세요.');
+                return;
+            }
+            
             const updatedData = {
                 ...currentData,
-                name: document.getElementById('runnerName').value,
+                name: name,
                 location: document.getElementById('location').value,
                 dateTime: document.getElementById('datetime').value
                     ? new Date(document.getElementById('datetime').value).toISOString()
                     : null,
-                distance: parseFloat(document.getElementById('distance').value),
+                distance: distance,
                 pace: document.getElementById('pace').value
             };
 
