@@ -37,6 +37,11 @@ public class RunningController {
     private final RegularRepository regularRepository;
     private final RunningRecordsRepository repository;
 
+    @GetMapping("/")
+    public String Default(Model model) {
+        return "running/home";
+    }
+
     @GetMapping("/running/home")
     public String Home(Model model) {
         return "running/home";
